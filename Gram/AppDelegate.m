@@ -33,7 +33,7 @@
     
     NSUserDefaults *settings = [NSUserDefaults standardUserDefaults];
     NSArray *keys = [NSArray arrayWithObjects:@"HISTORY", @"INSTANT_BOOT_MODE", @"AUTOMATIC_MODE", @"CONTINUOUS_MODE", @"USE_LOCATION", @"QR_ERROR_CORRECTION_LEVEL", @"IMPORT_MODE", nil];
-    NSArray *objects = [NSArray arrayWithObjects:[NSArray array], [NSNumber numberWithBool:NO], [NSNumber numberWithBool:NO], [NSNumber numberWithBool:NO], [NSNumber numberWithBool:YES], @"M", @"自動判別", nil];
+    NSArray *objects = [NSArray arrayWithObjects:[NSArray array], [NSNumber numberWithBool:NO], [NSNumber numberWithBool:NO], [NSNumber numberWithBool:NO], [NSNumber numberWithBool:YES], @"L", @"自動判別", nil];
     NSDictionary *defaults = [NSDictionary dictionaryWithObjects:objects forKeys:keys];
     [settings registerDefaults:defaults];
     

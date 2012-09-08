@@ -63,7 +63,10 @@
 
 - (NSString *)selectedMonthNameAndYear;
 {
-  return [monthAndYearFormatter stringFromDate:self.baseDate];
+  NSDateFormatter *jpFormatter = [[NSDateFormatter alloc] init];
+  [jpFormatter setDateFormat:@"yyyy年M月"];
+  return [jpFormatter stringFromDate:self.baseDate];
+  //return [monthAndYearFormatter stringFromDate:self.baseDate];
 }
 
 #pragma mark Low-level implementation details
