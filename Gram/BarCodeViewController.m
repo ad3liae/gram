@@ -220,7 +220,6 @@
     UITabBarWithAdController *tabBar = (UITabBarWithAdController *)self.tabBarController;
     tabBar.delegate = self;
     
-    [UIView beginAnimations:@"ad" context:nil];
     if (tabBar.bannerIsVisible)
     {
         [self.tableView setFrame:CGRectMake(frame.origin.x,
@@ -235,7 +234,6 @@
                                             frame.size.width,
                                             frame.size.height - 93)];
     }
-    [UIView commitAnimations];
 }
 
 - (void)viewWillDisappear:(BOOL)animated
@@ -267,7 +265,7 @@
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"selectableCell" forIndexPath:indexPath];
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"selectableCell"];
     
     cell.textLabel.text = [[labels objectAtIndex:indexPath.section] objectAtIndex:indexPath.row];
     cell.detailTextLabel.text = [[values objectAtIndex:indexPath.section] objectAtIndex:indexPath.row];
@@ -363,8 +361,8 @@
             
             NSData *imageData = UIImagePNGRepresentation(code);
             NSArray *keys = [NSArray arrayWithObjects:@"type", @"category", @"image", @"format", @"text", @"date", @"location", nil];
-            NSArray *values = [NSArray arrayWithObjects:@"encode", [GramContext get]->exportCondition, imageData, [NSNumber numberWithInt:format], string, date, [NSKeyedArchiver archivedDataWithRootObject:location], nil];
-            [GramContext get]->generated = [NSDictionary dictionaryWithObjects:values forKeys:keys];
+            NSArray *datas = [NSArray arrayWithObjects:@"encode", [GramContext get]->exportCondition, imageData, [NSNumber numberWithInt:format], string, date, [NSKeyedArchiver archivedDataWithRootObject:location], nil];
+            [GramContext get]->generated = [NSDictionary dictionaryWithObjects:datas forKeys:keys];
             [[GramContext get]->history insertObject:[GramContext get]->generated atIndex:0];
             
             [settings setObject:[[GramContext get]->history copy] forKey:@"HISTORY"];

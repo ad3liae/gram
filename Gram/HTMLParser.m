@@ -20,7 +20,6 @@
 @property BOOL isBuffering;
 @property (nonatomic, retain) NSMutableData *characterBuffer;
 
-- (void)fromC;
 - (void)appendCharacters:(const char *)characters length:(NSInteger)length;
 - (void)finishAppendCharacters:(NSString *)element;
 
@@ -149,6 +148,9 @@ static xmlSAXHandler simpleSAXHandlerStruct = {
 };
 
 @implementation HTMLParser
+@synthesize isItem;
+@synthesize isBuffering;
+@synthesize characterBuffer;
 
 - (id)init
 {

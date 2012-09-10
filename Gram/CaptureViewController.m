@@ -183,7 +183,7 @@
         NSLog(@"barcodeFormat %d", [result barcodeFormat]);
         NSData *imageData = UIImageJPEGRepresentation(image, 0.5);
         NSArray *keys = [NSArray arrayWithObjects:@"type", @"category", @"image", @"format", @"text", @"date", @"location", nil];
-        NSArray *values = [NSArray arrayWithObjects:@"decode", [self detectCategoryWithString:[result text]], imageData, [NSNumber numberWithInt:[result barcodeFormat]], [result text], [NSDate dateWithTimeIntervalSinceReferenceDate:[result timestamp]], [NSKeyedArchiver archivedDataWithRootObject:location], nil];
+        NSArray *datas = [NSArray arrayWithObjects:@"decode", [self detectCategoryWithString:[result text]], imageData, [NSNumber numberWithInt:[result barcodeFormat]], [result text], [NSDate dateWithTimeIntervalSinceReferenceDate:[result timestamp]], [NSKeyedArchiver archivedDataWithRootObject:location], nil];
         
         if ([settings boolForKey:@"CONTINUOUS_MODE"])
         {
@@ -197,7 +197,7 @@
         }
         
         [GramContext get]->sharedCompleted = NO;
-        [GramContext get]->captured = [NSDictionary dictionaryWithObjects:values forKeys:keys];
+        [GramContext get]->captured = [NSDictionary dictionaryWithObjects:datas forKeys:keys];
         [[GramContext get]->history insertObject:[GramContext get]->captured atIndex:0];
         
         [settings setObject:[[GramContext get]->history copy] forKey:@"HISTORY"];
@@ -216,7 +216,7 @@
             {
                 [delegate dismissCameraView];
             }
-            [self dismissModalViewControllerAnimated:YES];
+            [self dismissViewControllerAnimated:YES completion:nil];
         }
     }
 }
@@ -228,7 +228,7 @@
 
 - (IBAction)tapCancel:(id)sender
 {
-    [self dismissModalViewControllerAnimated:YES];
+    [self dismissViewControllerAnimated:YES completion:nil];
 }
 
 @end

@@ -828,6 +828,7 @@
 					"$(SRCROOT)/iCalObjCSDK/**",
 				);
 				INFOPLIST_FILE = "Gram/Gram-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 5.1;
 				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/Kal/src/**";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
@@ -847,6 +848,7 @@
 					"$(SRCROOT)/iCalObjCSDK/**",
 				);
 				INFOPLIST_FILE = "Gram/Gram-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 5.1;
 				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/Kal/src/**";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;

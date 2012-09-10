@@ -46,7 +46,6 @@
     tabBar.delegate = self;
     [self.tableView reloadData];
     
-    [UIView beginAnimations:@"ad" context:nil];
     if (tabBar.bannerIsVisible)
     {
         [self.tableView setFrame:CGRectMake(frame.origin.x,
@@ -61,7 +60,6 @@
                                             frame.size.width,
                                             frame.size.height - 93)];
     }
-    [UIView commitAnimations];
 }
 
 - (void)viewWillDisappear:(BOOL)animated
@@ -87,7 +85,7 @@
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"selectableCell" forIndexPath:indexPath];
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"selectableCell"];
     cell.textLabel.text = nil;
     cell.detailTextLabel.text = nil;
     

@@ -68,6 +68,12 @@
             self.tableView.backgroundColor = [UIColor blackColor];
         }
     }
+    
+    NSUserDefaults *settings = [NSUserDefaults standardUserDefaults];
+    if ([settings boolForKey:@"AUTOMATIC_MODE"] == YES)
+    {
+        [GramContext get]->sharedCompleted = NO;
+    }
 }
 
 - (void)viewWillAppear:(BOOL)animated
@@ -107,6 +113,7 @@
         }
         else
         {
+            self.navigationItem.title = @"読取";
             labels = [NSArray arrayWithObjects:[NSArray arrayWithObjects:@"カメラロールから作成する", nil], nil];
             self.navigationItem.rightBarButtonItem = nil;
             
@@ -149,7 +156,6 @@
     lastIndexPath = nil;
     
     UITabBarWithAdController *tabBar = (UITabBarWithAdController *)self.tabBarController;
-    [UIView beginAnimations:@"ad" context:nil];
     if (tabBar.bannerIsVisible)
     {
         [self.tableView setFrame:CGRectMake(frame.origin.x,
@@ -164,7 +170,6 @@
                                             frame.size.width,
                                             frame.size.height - 93)];
     }
-    [UIView commitAnimations];
 }
 
 - (void)viewWillDisappear:(BOOL)animated
@@ -287,19 +292,19 @@
     NSUserDefaults *settings = [NSUserDefaults standardUserDefaults];
     if ([_phase isEqualToString:@"history"])
     {
-        cell = [tableView dequeueReusableCellWithIdentifier:@"detailCell" forIndexPath:indexPath];
+        cell = [tableView dequeueReusableCellWithIdentifier:@"detailCell"];
         cell.detailTextLabel.text = [settings objectForKey:@"IMPORT_MODE"];
     }
     else
     {
         if ([GramContext get]->captured != nil)
         {
-            cell = [tableView dequeueReusableCellWithIdentifier:@"detailCell" forIndexPath:indexPath];
+            cell = [tableView dequeueReusableCellWithIdentifier:@"detailCell"];
             cell.detailTextLabel.text = [settings objectForKey:@"IMPORT_MODE"];
         }
         else
         {
-            cell = [tableView dequeueReusableCellWithIdentifier:@"selectableCell" forIndexPath:indexPath];
+            cell = [tableView dequeueReusableCellWithIdentifier:@"selectableCell"];
             cell.detailTextLabel.text = @"";
         }
     }
@@ -426,6 +431,7 @@
         capture.delegate = nil;
         capture = nil;
         self.tabBarController.delegate = self;
+        self.navigationItem.title = @"読取結果";
         
         if ([self.tableView viewWithTag:1] != nil)
             [[self.tableView viewWithTag:1] removeFromSuperview];

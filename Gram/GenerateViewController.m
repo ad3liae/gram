@@ -64,7 +64,6 @@
     UITabBarWithAdController *tabBar = (UITabBarWithAdController *)self.tabBarController;
     tabBar.delegate = self;
     
-    [UIView beginAnimations:@"ad" context:nil];
     if (tabBar.bannerIsVisible)
     {
         [self.tableView setFrame:CGRectMake(frame.origin.x,
@@ -79,7 +78,6 @@
                                             frame.size.width,
                                             frame.size.height - 93)];
     }
-    [UIView commitAnimations];
 }
 
 - (void)viewWillDisappear:(BOOL)animated
@@ -121,7 +119,7 @@
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"exportCell" forIndexPath:indexPath];
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"exportCell"];
     cell.textLabel.text = [[labels objectAtIndex:indexPath.section] objectAtIndex:indexPath.row];
     cell.detailTextLabel.text = @"";
     
@@ -130,7 +128,7 @@
 
 - (void)peoplePickerNavigationControllerDidCancel:(ABPeoplePickerNavigationController *)peoplePicker
 {
-    [self dismissModalViewControllerAnimated:YES];
+    [self dismissViewControllerAnimated:YES completion:nil];
     
     if (lastIndexPath != nil)
     {
@@ -189,7 +187,7 @@
     if (vCard != nil)
     {
         [GramContext get]->encodeString = vCard;
-        [self dismissModalViewControllerAnimated:YES];
+        [self dismissViewControllerAnimated:YES completion:nil];
         [self performSegueWithIdentifier:@"createSegue" sender:self];
     }
 }
@@ -199,7 +197,7 @@
     if (vEvent != nil)
     {
         [GramContext get]->encodeString = vEvent;
-        [self dismissModalViewControllerAnimated:YES];
+        [self dismissViewControllerAnimated:YES completion:nil];
         [self performSegueWithIdentifier:@"createSegue" sender:self];
     }
 }
@@ -207,7 +205,7 @@
 - (void)tapCancel:(id)sender
 {
     kal = nil;
-    [self dismissModalViewControllerAnimated:YES];
+    [self dismissViewControllerAnimated:YES completion:nil];
     
     if (lastIndexPath != nil)
     {
@@ -294,7 +292,7 @@
             ABPeoplePickerNavigationController *picker = [[ABPeoplePickerNavigationController alloc] init];
             picker.peoplePickerDelegate = self;
             picker.topViewController.navigationController.delegate = self;
-            [self presentModalViewController:picker animated:YES];
+            [self presentViewController:picker animated:YES completion:nil];
             
             NSString *card =
             @"BEGIN:VCARD"
@@ -416,7 +414,7 @@
             kal.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:
                                                      UIBarButtonSystemItemCancel target:self action:@selector(tapCancel:)];
             kal.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Today" style:UIBarButtonItemStyleBordered target:self action:@selector(showAndSelectToday)];
-            [self presentModalViewController:kalView animated:YES];
+            [self presentViewController:kalView animated:YES completion:nil];
             /*EKEventStore *eventStore = [[EKEventStore alloc] init];
              [eventStore requestAccessToEntityType:EKEntityTypeEvent completion:^(BOOL granted, NSError *error) {
              if (granted)

@@ -59,7 +59,6 @@
     self.title = @"座標を指定";
     
     /*
-     [UIView beginAnimations:@"ad" context:nil];
      if (tabBar.bannerIsVisible)
      {
      [self.mapView setFrame:CGRectMake(frame.origin.x,
@@ -74,7 +73,6 @@
      frame.size.width,
      frame.size.height - 93)];
      }
-     [UIView commitAnimations];
      */
 }
 

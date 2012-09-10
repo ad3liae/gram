@@ -160,7 +160,6 @@
     UITabBarWithAdController *tabBar = (UITabBarWithAdController *)self.tabBarController;
     tabBar.delegate = self;
     
-    [UIView beginAnimations:@"ad" context:nil];
     if (tabBar.bannerIsVisible)
     {
         [self.tableView setFrame:CGRectMake(frame.origin.x,
@@ -175,7 +174,6 @@
                                             frame.size.width,
                                             frame.size.height - 93)];
     }
-    [UIView commitAnimations];
 }
 
 - (void)viewWillDisappear:(BOOL)animated
@@ -364,8 +362,7 @@ didReceiveResponse:(NSURLResponse *)response
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    static NSString *CellIdentifier = @"detailCell";
-    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier forIndexPath:indexPath];
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"detailCell"];
     
     UILabel *label = (UILabel *)[cell viewWithTag:1];
     label.text = [[labels objectAtIndex:indexPath.section] objectAtIndex:indexPath.row];
@@ -401,6 +398,25 @@ didReceiveResponse:(NSURLResponse *)response
      // Pass the selected object to the new view controller.
      [self.navigationController pushViewController:detailViewController animated:YES];
      */
+}
+
+-(BOOL)tabBarController:(UITabBarController*)tabBarController shouldSelectViewController:(UIViewController *)viewController
+{
+    NSUInteger index = [tabBarController.viewControllers indexOfObject:viewController];
+    if (![_phase isEqualToString:@"history->detail"])
+    {
+        NSLog(@"%d", index);
+        if (index == 0)
+        {
+            [GramContext get]->captured = nil;
+            [GramContext get]->bootCompleted = YES;
+            
+            [self.navigationController popViewControllerAnimated:YES];
+            //[self performSegueWithIdentifier:@"captureSegue" sender:self];
+            return NO;
+        }
+    }
+    return YES;
 }
 
 #pragma mark - custom delegete

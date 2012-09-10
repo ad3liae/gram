@@ -77,7 +77,6 @@
         [mapView setRegion:region animated:NO];
     }
     /*
-    [UIView beginAnimations:@"ad" context:nil];
     if (tabBar.bannerIsVisible)
     {
         [self.mapView setFrame:CGRectMake(frame.origin.x,
@@ -92,7 +91,6 @@
                                             frame.size.width,
                                             frame.size.height - 93)];
     }
-    [UIView commitAnimations];
      */
 }
 
@@ -139,8 +137,10 @@
         {
             annotationView.pinColor = MKPinAnnotationColorGreen;
         }
-        
-        //annotationView.leftCalloutAccessoryView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 30, 30)];
+        UIImage *image = [UIImage imageWithData:[gramAnnotation.dictionary objectForKey:@"image"]];
+        UIImageView *imageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 30, 30)];
+        imageView.image = image;
+        annotationView.leftCalloutAccessoryView = imageView;
         annotationView.rightCalloutAccessoryView = [UIButton buttonWithType:UIButtonTypeDetailDisclosure];
     }
     else
@@ -166,6 +166,36 @@
         [GramContext get]->encodeFromHistory = gramAnnotation.dictionary;
         [self performSegueWithIdentifier:@"generateSegue" sender:self];
     }
+}
+/*
+- (void)mapView:(MKMapView *)view didAddAnnotationViews:(NSArray *)views {
+    [view selectAnnotation:[view.annotations lastObject] animated:YES];
+}
+*/
+- (void)mapViewDidFinishLoadingMap:(MKMapView *)view
+{
+    for (id<MKAnnotation>annotation in view.annotations)
+    {
+        //if ([currentAnnotation isEqual:annotationToSelect])
+        //{
+            [view selectAnnotation:annotation animated:NO];
+        //}
+    }
+    
+    [view selectAnnotation:[view.annotations lastObject] animated:NO];
+}
+
+-(void)mapView:(MKMapView *)mapView didDeselectAnnotationView:(MKAnnotationView *)view
+{
+    NSLog(@"deselect");
+    [self performSelector:@selector(reSelectAnnotationIfNoneSelected:)
+               withObject:view.annotation afterDelay:0];
+}
+
+- (void)reSelectAnnotationIfNoneSelected:(id<MKAnnotation>)annotation
+{
+    if (mapView.selectedAnnotations.count == 0)
+        [mapView selectAnnotation:annotation animated:NO];
 }
 
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender

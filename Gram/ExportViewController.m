@@ -131,7 +131,6 @@
     UITabBarWithAdController *tabBar = (UITabBarWithAdController *)self.tabBarController;
     tabBar.delegate = self;
     
-    [UIView beginAnimations:@"ad" context:nil];
     if (tabBar.bannerIsVisible)
     {
         [self.tableView setFrame:CGRectMake(frame.origin.x,
@@ -146,7 +145,6 @@
                                             frame.size.width,
                                             frame.size.height - 93)];
     }
-    [UIView commitAnimations];
 }
 
 - (void)viewWillDisappear:(BOOL)animated
@@ -382,12 +380,12 @@
     NSString *label = [self labelAtIndexPath:indexPath];
     if ([label isEqualToString:@"作成する"])
     {
-        cell = [tableView dequeueReusableCellWithIdentifier:@"selectableCell" forIndexPath:indexPath];
+        cell = [tableView dequeueReusableCellWithIdentifier:@"selectableCell"];
         cell.textLabel.text = [[labels objectAtIndex:indexPath.section] objectAtIndex:indexPath.row];
     }
     else if ([label isEqualToString:@"テキストを入力"] || [label isEqualToString:@"メッセージを入力"] || [label isEqualToString:@"本文を入力"])
     {
-        cell = [tableView dequeueReusableCellWithIdentifier:@"textAreaCell" forIndexPath:indexPath];
+        cell = [tableView dequeueReusableCellWithIdentifier:@"textAreaCell"];
         placeHolder = (UILabel *)[cell viewWithTag:1];
         placeHolder.text = label;
         inputTextArea = (UITextView *)[cell viewWithTag:2];
@@ -411,7 +409,7 @@
     }
     else
     {
-        cell = [tableView dequeueReusableCellWithIdentifier:@"detailCell" forIndexPath:indexPath];
+        cell = [tableView dequeueReusableCellWithIdentifier:@"detailCell"];
         cell.textLabel.text = [[labels objectAtIndex:indexPath.section] objectAtIndex:indexPath.row];
         cell.detailTextLabel.text = @"";
         if ([label isEqualToString:@"セキュリティ"])

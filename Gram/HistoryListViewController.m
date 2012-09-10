@@ -99,7 +99,6 @@
     UITabBarWithAdController *tabBar = (UITabBarWithAdController *)self.tabBarController;
     tabBar.delegate = self;
     
-    [UIView beginAnimations:@"ad" context:nil];
     if (tabBar.bannerIsVisible)
     {
         [self.tableView setFrame:CGRectMake(frame.origin.x,
@@ -122,7 +121,6 @@
                                                                                  frame.size.width,
                                                                                  frame.size.height - 93 - 44)];
     }
-    [UIView commitAnimations];
     
     //NSLog(@"%f", self.searchDisplayController.searchResultsTableView.frame.size.height);
 }
@@ -198,7 +196,7 @@
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    UITableViewCell *cell = [self.tableView dequeueReusableCellWithIdentifier:@"historyCell" forIndexPath:indexPath];
+    UITableViewCell *cell = [self.tableView dequeueReusableCellWithIdentifier:@"historyCell"];
     UIView *background =[[UIView alloc] initWithFrame:cell.frame];
     background.backgroundColor = [UIColor whiteColor];
     cell.backgroundView = background;
@@ -362,18 +360,6 @@
             [GramContext get]->encodeFromHistory = data;
             [self performSegueWithIdentifier:@"generateSegue" sender:self];
         }
-    }
-    else
-    {
-        NSArray *selectedRows = [self.tableView indexPathsForSelectedRows];
-    }
-}
-
-- (void)tableView:(UITableView *)tableView didDeselectRowAtIndexPath:(NSIndexPath *)indexPath
-{
-    if (self.tableView.isEditing)
-    {
-        NSArray *selectedRows = [self.tableView indexPathsForSelectedRows];
     }
 }
 
