@@ -275,6 +275,14 @@
         {
             return 52;
         }
+        else if ([condition isEqualToString:@"SMS"])
+        {
+            return 10;
+        }
+        else if ([condition isEqualToString:@"Eメール"])
+        {
+            return 10;
+        }
     }
     else if (section == 1)
     {
@@ -288,7 +296,7 @@
         }
     }
     
-    return tableView.sectionFooterHeight;
+    return 32;
 }
 
 - (UIView *)tableView:(UITableView *)tableView viewForFooterInSection:(NSInteger)section

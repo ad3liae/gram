@@ -280,12 +280,12 @@
     
     return tableView.sectionHeaderHeight;
 }
-
+/*
 -(CGFloat)tableView:(UITableView *)tableView heightForFooterInSection:(NSInteger)section
 {
     return 10;
 }
-
+*/
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
     UITableViewCell *cell = nil;

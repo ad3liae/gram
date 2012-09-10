@@ -106,7 +106,7 @@
 {
     return [[labels objectAtIndex:section] count];
 }
-
+/*
 -(CGFloat)tableView:(UITableView *)tableView heightForFooterInSection:(NSInteger)section
 {
     if (kal != nil)
@@ -114,9 +114,9 @@
         return 0;
     }
     
-    return 10;
+    return tableView.;
 }
-
+*/
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"exportCell"];

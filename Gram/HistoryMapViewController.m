@@ -43,22 +43,24 @@
             CLLocation *location = [NSKeyedUnarchiver unarchiveObjectWithData:[data objectForKey:@"location"]];
             if (location != nil)
             {
+                NSString *title = nil;
                 NSString *subTitle = nil;
                 if ([[data objectForKey:@"type"] isEqualToString:@"decode"])
                 {
-                    subTitle = @"読取";
+                    //subTitle = @"読取";
                 }
                 else
                 {
-                    subTitle = @"作成";
+                    //subTitle = @"作成";
                 }
-                
+                title = [data objectForKey:@"category"];
+                subTitle = [data objectForKey:@"text"];
                 NSDate *date = [data objectForKey:@"date"];
                 NSDateFormatter *df = [[NSDateFormatter alloc] init];
                 df.dateFormat  = @"yyyy/MM/dd HH:mm";
                 GramAnnotation *placeMark = [[GramAnnotation alloc]
                                              initWithCoordinate:location.coordinate
-                                             andTitle:[NSString stringWithFormat:@"%@", [df stringFromDate:date]]
+                                             andTitle:title
                                              andSubTitle:subTitle
                                              withData:data];
                 
@@ -174,6 +176,7 @@
 */
 - (void)mapViewDidFinishLoadingMap:(MKMapView *)view
 {
+    /*
     for (id<MKAnnotation>annotation in view.annotations)
     {
         //if ([currentAnnotation isEqual:annotationToSelect])
@@ -181,10 +184,10 @@
             [view selectAnnotation:annotation animated:NO];
         //}
     }
-    
-    [view selectAnnotation:[view.annotations lastObject] animated:NO];
+    */
+    [view selectAnnotation:[view.annotations objectAtIndex:0] animated:NO];
 }
-
+/*
 -(void)mapView:(MKMapView *)mapView didDeselectAnnotationView:(MKAnnotationView *)view
 {
     NSLog(@"deselect");
@@ -197,7 +200,7 @@
     if (mapView.selectedAnnotations.count == 0)
         [mapView selectAnnotation:annotation animated:NO];
 }
-
+*/
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
 {
     NSString *current = @"history";
