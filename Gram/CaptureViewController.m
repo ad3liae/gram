@@ -212,6 +212,8 @@
         }
         else
         {
+            
+            
             if (delegate != nil)
             {
                 [delegate dismissCameraView];

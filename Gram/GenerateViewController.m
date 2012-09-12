@@ -95,6 +95,61 @@
     // Dispose of any resources that can be recreated.
 }
 
+
+- (UIImage *)listIconFromLabel:(NSString *)label
+{
+    UIImage *image = nil;
+    if ([label isEqualToString:@"URL"])
+    {
+        image = [UIImage imageNamed:@"listicon_url.png"];
+    }
+    else if ([label isEqualToString:@"場所"])
+    {
+        image = [UIImage imageNamed:@"listicon_map.png"];
+    }
+    else if ([label isEqualToString:@"連絡先"])
+    {
+        image = [UIImage imageNamed:@"listicon_address.png"];
+    }
+    else if ([label isEqualToString:@"イベント"])
+    {
+        image = [UIImage imageNamed:@"listicon_event.png"];
+    }
+    else if ([label isEqualToString:@"電話番号"])
+    {
+        image = [UIImage imageNamed:@"listicon_tel.png"];
+    }
+    else if ([label isEqualToString:@"SMS"])
+    {
+        image = [UIImage imageNamed:@"listicon_sms.png"];
+    }
+    else if ([label isEqualToString:@"Eメール"])
+    {
+        image = [UIImage imageNamed:@"listicon_email.png"];
+    }
+    else if ([label isEqualToString:@"ツイッター"])
+    {
+        image = [UIImage imageNamed:@"listicon_twitter.png"];
+    }
+    else if ([label isEqualToString:@"フェイスブック"])
+    {
+        image = [UIImage imageNamed:@"listicon_facebook.png"];
+    }
+    else if ([label isEqualToString:@"Wi-Fiネットワーク"])
+    {
+        image = [UIImage imageNamed:@"listicon_wifi.png"];
+    }
+    else if ([label isEqualToString:@"テキスト"])
+    {
+        image = [UIImage imageNamed:@"listicon_text.png"];
+    }
+    else if ([label isEqualToString:@"クリップボードの内容"])
+    {
+        image = [UIImage imageNamed:@"listicon_clipboard.png"];
+    }
+    return image;
+}
+
 #pragma mark - Table view data source
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
@@ -120,8 +175,11 @@
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"exportCell"];
-    cell.textLabel.text = [[labels objectAtIndex:indexPath.section] objectAtIndex:indexPath.row];
-    cell.detailTextLabel.text = @"";
+    NSString *label = [[labels objectAtIndex:indexPath.section] objectAtIndex:indexPath.row];
+    UILabel *textLabel = (UILabel *)[cell viewWithTag:1];
+    textLabel.text = label;
+    UIImageView *imageView = (UIImageView *)[cell viewWithTag:2];
+    imageView.image = [self listIconFromLabel:label];
     
     return cell;
 }

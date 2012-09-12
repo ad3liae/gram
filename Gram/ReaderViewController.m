@@ -78,6 +78,8 @@
 
 - (void)viewWillAppear:(BOOL)animated
 {
+    
+
     self.navigationItem.rightBarButtonItem = item;
     labels = [NSArray arrayWithObject:[NSArray array]];
     
@@ -101,7 +103,7 @@
     }
     else
     {
-        if ([GramContext get]->captured != nil)
+        /*if ([GramContext get]->captured != nil)
         {
             self.navigationItem.title = @"読取結果";
             labels = [NSArray arrayWithObjects:[NSArray arrayWithObjects:@"インポート", nil], nil];
@@ -112,7 +114,7 @@
             }
         }
         else
-        {
+        {*/
             self.navigationItem.title = @"読取";
             labels = [NSArray arrayWithObjects:[NSArray arrayWithObjects:@"カメラロールから作成する", nil], nil];
             self.navigationItem.rightBarButtonItem = nil;
@@ -136,7 +138,7 @@
             notice.backgroundColor = [UIColor clearColor];
             notice.textColor = [UIColor whiteColor];
             [imageView addSubview:notice];
-        }
+        //}
     }
     
     [self.tableView addSubview:imageView];
@@ -170,6 +172,7 @@
                                             frame.size.width,
                                             frame.size.height - 93)];
     }
+
 }
 
 - (void)viewWillDisappear:(BOOL)animated
@@ -219,7 +222,7 @@
     {
         if ([GramContext get]->captured != nil)
         {
-            NSUserDefaults *settings = [NSUserDefaults standardUserDefaults];
+            /*NSUserDefaults *settings = [NSUserDefaults standardUserDefaults];
             if ([settings boolForKey:@"AUTOMATIC_MODE"] != YES)
             {
                 [GramContext get]->sharedCompleted = YES;
@@ -227,9 +230,9 @@
             
             if ([GramContext get]->sharedCompleted != YES)
             {
-                [GramContext get]->sharedCompleted = YES;
-                [self performSegueWithIdentifier:@"importSegue" sender:self];
-            }
+                [GramContext get]->sharedCompleted = YES;*/
+                //[self performSegueWithIdentifier:@"importSegue" sender:self];
+            //}
         }
         else
         {
@@ -270,10 +273,10 @@
         }
         else
         {
-            if ([GramContext get]->captured != nil)
+            /*if ([GramContext get]->captured != nil)
             {
                 return 320;
-            }
+            }*/
             return 300;
         }
     }
@@ -297,16 +300,16 @@
     }
     else
     {
-        if ([GramContext get]->captured != nil)
+        /*if ([GramContext get]->captured != nil)
         {
             cell = [tableView dequeueReusableCellWithIdentifier:@"detailCell"];
             cell.detailTextLabel.text = [settings objectForKey:@"IMPORT_MODE"];
         }
         else
-        {
+        {*/
             cell = [tableView dequeueReusableCellWithIdentifier:@"selectableCell"];
             cell.detailTextLabel.text = @"";
-        }
+        //}
     }
     cell.textLabel.text = [[labels objectAtIndex:indexPath.section] objectAtIndex:indexPath.row];
     
@@ -430,26 +433,8 @@
     {
         capture.delegate = nil;
         capture = nil;
-        self.tabBarController.delegate = self;
-        self.navigationItem.title = @"読取結果";
-        
-        if ([self.tableView viewWithTag:1] != nil)
-            [[self.tableView viewWithTag:1] removeFromSuperview];
-        
-        UIImageView *imageView = [[UIImageView alloc] initWithFrame:CGRectMake(20, 20, 280, 280)];
-        imageView.contentMode = UIViewContentModeScaleAspectFit;
-        imageView.tag = 1;
-        
-        [self.tableView addSubview:imageView];
-        
-        labels = [NSArray arrayWithObjects:[NSArray arrayWithObjects:@"インポート形式", nil], nil];
-        NSDictionary *data = [GramContext get]->captured;
-        if (data != nil)
-        {
-            imageView.image = [UIImage imageWithData:[data objectForKey:@"image"]];
-        }
-        
-        [self.tableView reloadData];
+        self.tabBarController.delegate = nil;
+        [self performSegueWithIdentifier:@"importSegue" sender:self];
     }
 }
 

@@ -12,6 +12,7 @@
 #import "UITabBarWithAdController.h"
 #import "GramContext.h"
 #import "GramAnnotation.h"
+#import "DetailViewController.h"
 
 @interface HistoryMapViewController ()
 {
@@ -209,7 +210,7 @@
     {
         NSLog(@"tether: %@ detailSegue", current);
         
-        ReaderViewController *view = segue.destinationViewController;
+        DetailViewController *view = segue.destinationViewController;
         view.phase = current;
     }
     else if ([segue.identifier isEqualToString:@"generateSegue"])

@@ -31,7 +31,7 @@
 
 - (void)bannerViewDidLoadAd:(ADBannerView *)banner
 {
-    NSLog(@"loaded");
+    //NSLog(@"banner loaded");
     if (!self.bannerIsVisible)
     {
         [UIView beginAnimations:@"animateAdBannerOn" context:NULL];
@@ -39,7 +39,7 @@
         [UIView commitAnimations];
         self.bannerIsVisible = YES;
         
-        NSLog(@"%@", delegate);
+        //NSLog(@"%@", delegate);
         if (delegate != nil)
         {
             [delegate bannerIsVisible];
@@ -49,7 +49,7 @@
 
 -(void)bannerView:(ADBannerView *)banner didFailToReceiveAdWithError:(NSError *)error
 {
-    NSLog(@"failed");
+    //NSLog(@"banner failed");
     if (self.bannerIsVisible)
     {
         [UIView beginAnimations:@"animateAdBannerOff" context:NULL];

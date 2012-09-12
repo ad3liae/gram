@@ -10,6 +10,7 @@
 #import "BarCodeViewController.h"
 #import "UITabBarWithAdController.h"
 #import "ReaderViewController.h"
+#import "DetailViewController.h"
 #import "GramContext.h"
 
 @interface HistoryListViewController ()
@@ -175,6 +176,60 @@
     
 }
 
+- (UIImage *)listIconFromLabel:(NSString *)label
+{
+    UIImage *image = nil;
+    if ([label isEqualToString:@"URL"])
+    {
+        image = [UIImage imageNamed:@"listicon_url.png"];
+    }
+    else if ([label isEqualToString:@"場所"])
+    {
+        image = [UIImage imageNamed:@"listicon_map.png"];
+    }
+    else if ([label isEqualToString:@"連絡先"])
+    {
+        image = [UIImage imageNamed:@"listicon_address.png"];
+    }
+    else if ([label isEqualToString:@"イベント"])
+    {
+        image = [UIImage imageNamed:@"listicon_event.png"];
+    }
+    else if ([label isEqualToString:@"電話番号"])
+    {
+        image = [UIImage imageNamed:@"listicon_tel.png"];
+    }
+    else if ([label isEqualToString:@"SMS"])
+    {
+        image = [UIImage imageNamed:@"listicon_sms.png"];
+    }
+    else if ([label isEqualToString:@"Eメール"])
+    {
+        image = [UIImage imageNamed:@"listicon_email.png"];
+    }
+    else if ([label isEqualToString:@"ツイッター"])
+    {
+        image = [UIImage imageNamed:@"listicon_twitter.png"];
+    }
+    else if ([label isEqualToString:@"フェイスブック"])
+    {
+        image = [UIImage imageNamed:@"listicon_facebook.png"];
+    }
+    else if ([label isEqualToString:@"Wi-Fiネットワーク"])
+    {
+        image = [UIImage imageNamed:@"listicon_wifi.png"];
+    }
+    else if ([label isEqualToString:@"テキスト"])
+    {
+        image = [UIImage imageNamed:@"listicon_text.png"];
+    }
+    else if ([label isEqualToString:@"クリップボードの内容"])
+    {
+        image = [UIImage imageNamed:@"listicon_clipboard.png"];
+    }
+    return image;
+}
+
 #pragma mark - Table view data source
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
@@ -213,32 +268,26 @@
     
     NSDateFormatter *df = [[NSDateFormatter alloc] init];
     df.dateFormat  = @"yyyy/MM/dd HH:mm";
+    NSDate *date = [data objectForKey:@"date"];
+    UILabel *label = (UILabel *)[cell viewWithTag:1];
+    label.text = [data objectForKey:@"category"];
+    [label sizeToFit];
+    UILabel *detail = (UILabel *)[cell viewWithTag:2];
+    detail.frame = CGRectMake((int)(label.frame.origin.x + label.frame.size.width + 5), label.frame.origin.y + 3, 0, 43);
     if ([[data objectForKey:@"type"] isEqualToString:@"decode"])
     {
-        NSDate *date = [data objectForKey:@"date"];
-        UILabel *label = (UILabel *)[cell viewWithTag:1];
-        label.text = [data objectForKey:@"category"];
-        [label sizeToFit];
-        UILabel *detail = (UILabel *)[cell viewWithTag:2];
-        detail.frame = CGRectMake((int)(label.frame.origin.x + label.frame.size.width + 5), label.frame.origin.y + 3, 0, 0);
         detail.text = [NSString stringWithFormat:@"— 読取済み %@", [self calculateIntervalSinceNow:date]];
-        [detail sizeToFit];
-        UILabel *content = (UILabel *)[cell viewWithTag:3];
-        content.text = [data objectForKey:@"text"];
     }
     else
     {
-        NSDate *date = [data objectForKey:@"date"];
-        UILabel *label = (UILabel *)[cell viewWithTag:1];
-        label.text = [data objectForKey:@"category"];
-        [label sizeToFit];
-        UILabel *detail = (UILabel *)[cell viewWithTag:2];
-        detail.frame = CGRectMake((int)(label.frame.origin.x + label.frame.size.width + 5), label.frame.origin.y + 3, 0, 0);
         detail.text = [NSString stringWithFormat:@"— 作成済み %@", [self calculateIntervalSinceNow:date]];
-        [detail sizeToFit];
-        UILabel *content = (UILabel *)[cell viewWithTag:3];
-        content.text = [data objectForKey:@"text"];
     }
+    [detail sizeToFit];
+    UILabel *content = (UILabel *)[cell viewWithTag:3];
+    content.text = [data objectForKey:@"text"];
+    UIImageView *imageView = (UIImageView *)[cell viewWithTag:4];
+    imageView.image = [self listIconFromLabel:[data objectForKey:@"category"]];
+    
     return cell;
 }
 
@@ -398,7 +447,7 @@
     {
         NSLog(@"tether: %@ detailSegue", current);
         
-        ReaderViewController *view = segue.destinationViewController;
+        DetailViewController *view = segue.destinationViewController;
         view.phase = current;
     }
     else if ([segue.identifier isEqualToString:@"generateSegue"])
