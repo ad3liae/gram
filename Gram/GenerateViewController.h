@@ -13,7 +13,7 @@
 #import <EventKitUI/EventKitUI.h>
 #import "UITabBarWithAdDelegate.h"
 
-@interface GenerateViewController : UIViewController <ABPeoplePickerNavigationControllerDelegate, UINavigationControllerDelegate, UITableViewDelegate, UITableViewDataSource, UITabBarWithAdDelegate>
+@interface GenerateViewController : UIViewController <ABPeoplePickerNavigationControllerDelegate, UINavigationControllerDelegate, UIActionSheetDelegate, UITableViewDelegate, UITableViewDataSource, UITabBarWithAdDelegate>
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
 
 @end

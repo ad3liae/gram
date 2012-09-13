@@ -18,6 +18,7 @@
     NSMutableArray *contactList;
     ABAddressBookRef addressBook;
     BOOL foundSearchBar;
+    ABPeoplePickerNavigationController *picker;
     KalViewController *kal;
     UINavigationController *kalView;
     id dataSource;
@@ -25,6 +26,8 @@
     NSString *vEvent;
     NSIndexPath *lastIndexPath;
     CGRect frame;
+    NSMutableArray *record;
+    CFArrayRef personRecordRef;
 }
 
 @end
@@ -199,17 +202,64 @@
                                 property:(ABPropertyID)property
                               identifier:(ABMultiValueIdentifier)identifier
 {
-    //[self dismissModalViewControllerAnimated:YES];
+    ABMutableMultiValueRef *multi = ABRecordCopyValue(person, property);
+    CFIndex index = ABMultiValueGetIndexForIdentifier(multi, identifier);
+    NSString *data = (__bridge NSString *)ABMultiValueCopyValueAtIndex(multi, index);
+    NSDictionary *selectedField = @{@"key":[NSString stringWithFormat:@"%d", property], @"value":data};
+    
+    UIView *view = peoplePicker.topViewController.view;
+    UITableView *tableView = nil;
+    
+    for (UIView *v in view.subviews) {
+        if ([v isKindOfClass:[UITableView class]])
+        {
+            tableView = (UITableView *)v;
+            break;
+        }
+    }
+    
+    if (tableView != nil)
+    {
+        UITableViewCell *cell = [tableView cellForRowAtIndexPath:[tableView indexPathForSelectedRow]];
+        if (cell.accessoryType == UITableViewCellAccessoryNone)
+        {
+            cell.accessoryType = UITableViewCellAccessoryCheckmark;
+            [record addObject:selectedField];
+        }
+        else
+        {
+            cell.accessoryType = UITableViewCellAccessoryNone;
+            NSInteger index = 0;
+            for (NSDictionary *field in record)
+            {
+                if ([[field objectForKey:@"key"] isEqualToString:[NSString stringWithFormat:@"%d", property]] &&
+                    [[field objectForKey:@"value"] isEqualToString:data])
+                {
+                    break;
+                }
+                else
+                {
+                    index++;
+                }
+            }
+            [record removeObjectAtIndex:index];
+        }
+        
+        [tableView deselectRowAtIndexPath:[tableView indexPathForSelectedRow] animated:NO];
+    }
+    
     return NO;
 }
 
 - (BOOL)peoplePickerNavigationController:(ABPeoplePickerNavigationController *)peoplePicker
       shouldContinueAfterSelectingPerson:(ABRecordRef)person
 {
+    picker = peoplePicker;
     NSArray *array = [NSArray arrayWithObject:(__bridge id)(person)];
     CFArrayRef arrayRef = (__bridge CFArrayRef)array;
     NSData *vCards = (__bridge NSData *)ABPersonCreateVCardRepresentationWithPeople(arrayRef);
     vCard = [[NSString alloc] initWithData:(NSData *)vCards encoding:NSUTF8StringEncoding];
+    record = [NSMutableArray array];
     
     return YES;
 }
@@ -242,11 +292,24 @@
 
 - (void)tapExportContact:(id)sender
 {
-    if (vCard != nil)
+    UIActionSheet *actionSheet = [[UIActionSheet alloc]
+                                  initWithTitle:@"エクスポート"
+                                  delegate:self
+                                  cancelButtonTitle:@"キャンセル"
+                                  destructiveButtonTitle:nil
+                                  otherButtonTitles:@"すべての項目",
+                                  @"選択した項目のみ", nil];
+    [actionSheet showInView:picker.view];
+}
+
+- (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+    if (buttonIndex == 0)
     {
         [GramContext get]->encodeString = vCard;
-        [self dismissViewControllerAnimated:YES completion:nil];
+        NSLog(@"%@", vCard);
         [self performSegueWithIdentifier:@"createSegue" sender:self];
+        [self dismissViewControllerAnimated:YES completion:nil];
     }
 }
 
@@ -254,9 +317,11 @@
 {
     if (vEvent != nil)
     {
+        kal = nil;
         [GramContext get]->encodeString = vEvent;
-        [self dismissViewControllerAnimated:YES completion:nil];
+        NSLog(@"%@", vEvent);
         [self performSegueWithIdentifier:@"createSegue" sender:self];
+        [self dismissViewControllerAnimated:YES completion:nil];
     }
 }
 
@@ -307,6 +372,7 @@
         vc.event = [dataSource eventAtIndexPath:indexPath];
         vc.allowsEditing = NO;
         kalView.delegate = self;
+        vEvent = @"sample";
         /*
         CGICalendar *cal = [CGICalendar new];
         CGICalendarObject *obj = [CGICalendarObject objectWithProdid:@"//CyberGarage//iCal4ObjC//EN"];

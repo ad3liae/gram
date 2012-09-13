@@ -283,7 +283,11 @@ const NSStringEncoding DEFAULT_BYTE_MODE_ENCODING = NSISOLatin1StringEncoding;
 + (int)totalInputBytes:(int)numInputBits version:(ZXQRCodeVersion*)version mode:(ZXMode*)mode {
   int modeInfoBits = 4;
   int charCountBits = [mode characterCountBits:version];
-  int headerBits = modeInfoBits + charCountBits;
+  /*
+   * 2012/09/13 ad3liae
+   * Consider possible ECI bits.
+   */
+  int headerBits = modeInfoBits + charCountBits + 8;
   int totalBits = numInputBits + headerBits;
 
   return (totalBits + 7) / 8;
