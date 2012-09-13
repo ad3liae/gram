@@ -61,7 +61,7 @@
     condition = @"URL";
     labels = [NSMutableArray arrayWithObjects:[NSMutableArray array], nil];
     values = [NSMutableArray arrayWithObjects:[NSMutableArray array], nil];
-    
+    NSLog(@"viewWillAppear");
     NSDictionary *data = nil;
     if ([_phase isEqualToString:@"history"])
     {
@@ -74,14 +74,16 @@
     
     if (data != nil)
     {
-        content = [NSString stringWithFormat:@"バーコードタイプ\n%@\n\n内容\n%@", [self formatFromId:[data objectForKey:@"format"]], [data objectForKey:@"text"]];
-        UIImageView *imageView = [[UIImageView alloc] initWithFrame:CGRectMake(10, 20, 140, 140)];
-        imageView.image = [UIImage imageWithData:[data objectForKey:@"image"]];
-        [imageView setContentMode:UIViewContentModeScaleAspectFit];
+        content = [NSString stringWithFormat:@"コード種別\n%@\n\n内容\n%@", [self formatFromId:[data objectForKey:@"format"]], [data objectForKey:@"text"]];
+        UIImage *image = [UIImage imageWithData:[data objectForKey:@"image"]];
+        CGFloat ratio = image.size.width / image.size.height;
+        UIImageView *imageView = [[UIImageView alloc] initWithFrame:CGRectMake(20, 20, 140 * (ratio < 1 ? ratio : 1), 140 * (ratio < 1 ? 1 : ratio))];
+        imageView.image = image;
+        [imageView setContentMode:UIViewContentModeScaleToFill];
         [self.tableView addSubview:imageView];
-        CGSize blockSize = [self calculateLabelBlockSize:content];
+        CGSize blockSize = [self calculateLabelBlockSize:content frameSize:320 - 140 * (ratio < 1 ? ratio : 1) - 60];
         
-        UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(160, 20, 320 - 170, blockSize.height)];
+        UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(140 * (ratio < 1 ? ratio : 1) + 40, 20, 320 - 140 * (ratio < 1 ? ratio : 1) - 60, blockSize.height)];
         label.numberOfLines = 0;
         label.text = content;
         label.textAlignment = UITextAlignmentLeft;
@@ -213,13 +215,15 @@
     if (data != nil)
     {
         content = [NSString stringWithFormat:@"バーコードタイプ\n%@\n\n内容\n%@", [self formatFromId:[data objectForKey:@"format"]], [data objectForKey:@"text"]];
-        UIImageView *imageView = [[UIImageView alloc] initWithFrame:CGRectMake(10, 20, 140, 140)];
-        imageView.image = [UIImage imageWithData:[data objectForKey:@"image"]];
-        [imageView setContentMode:UIViewContentModeScaleAspectFit];
+        UIImage *image = [UIImage imageWithData:[data objectForKey:@"image"]];
+        CGFloat ratio = image.size.width / image.size.height;
+        UIImageView *imageView = [[UIImageView alloc] initWithFrame:CGRectMake(20, 20, 140 * (ratio < 1 ? ratio : 1), 140 * (ratio < 1 ? 1 : ratio))];
+        imageView.image = image;
+        [imageView setContentMode:UIViewContentModeScaleToFill];
         [self.tableView addSubview:imageView];
-        CGSize blockSize = [self calculateLabelBlockSize:content];
-
-        UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(160, 20, 320 - 170, blockSize.height)];
+        CGSize blockSize = [self calculateLabelBlockSize:content frameSize:320 - 140 * (ratio < 1 ? ratio : 1) - 60];
+        
+        UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(140 * (ratio < 1 ? ratio : 1) + 40, 20, 320 - 140 * (ratio < 1 ? ratio : 1) - 60, blockSize.height)];
         label.numberOfLines = 0;
         label.text = content;
         label.textAlignment = UITextAlignmentLeft;
@@ -333,6 +337,7 @@
 
 - (void)viewDidAppear:(BOOL)animated
 {
+    NSLog(@"viewDidAppear");
     UITabBarWithAdController *tabBar = (UITabBarWithAdController *)self.tabBarController;
     if (tabBar.delegate != self)
     {
@@ -379,7 +384,20 @@
     UIFont *font;
     
     font = [UIFont boldSystemFontOfSize:14];
-    size = CGSizeMake(320 - 170, 1000);
+    size = CGSizeMake(210, 1000);
+    value = [text sizeWithFont:font constrainedToSize:size lineBreakMode:UILineBreakModeCharacterWrap];
+    
+    return value;
+}
+
+- (CGSize)calculateLabelBlockSize:(NSString *)text frameSize:(CGFloat)width
+{
+    CGSize size;
+    CGSize value;
+    UIFont *font;
+    
+    font = [UIFont boldSystemFontOfSize:14];
+    size = CGSizeMake(width, 1000);
     value = [text sizeWithFont:font constrainedToSize:size lineBreakMode:UILineBreakModeCharacterWrap];
     
     return value;
@@ -592,6 +610,7 @@ didReceiveResponse:(NSURLResponse *)response
         NSIndexPath *indexPath = [NSIndexPath indexPathForRow:([[labels objectAtIndex:0] count] - 1) inSection:0];
         NSArray *indexPaths = [NSArray arrayWithObjects:indexPath, nil];
         [self.tableView insertRowsAtIndexPaths:indexPaths withRowAnimation:UITableViewRowAnimationAutomatic];
+        url = nil;
         
         return;
     }
@@ -656,7 +675,7 @@ didReceiveResponse:(NSURLResponse *)response
     switch (indexPath.section)
     {
         case 0:
-            height = (int)[self calculateTextBlockSize:[[values objectAtIndex:0] objectAtIndex:indexPath.row]].height;
+            height = [self calculateTextBlockSize:[[values objectAtIndex:0] objectAtIndex:indexPath.row]].height;
             return ((44 - 25) > height ? 44 : height + 25);
     }
     
@@ -671,7 +690,8 @@ didReceiveResponse:(NSURLResponse *)response
     label.text = [[labels objectAtIndex:indexPath.section] objectAtIndex:indexPath.row];
     
     UILabel *detail = (UILabel *)[cell viewWithTag:2];
-    detail.frame = CGRectMake(83, 12, 210, (int)[self calculateTextBlockSize:[[values objectAtIndex:indexPath.section] objectAtIndex:indexPath.row]].height);
+    detail.frame = CGRectMake(83, 12, 210, [self calculateTextBlockSize:[[values objectAtIndex:indexPath.section] objectAtIndex:indexPath.row]].height);
+    detail.lineBreakMode = UILineBreakModeCharacterWrap;
     detail.text = [[values objectAtIndex:indexPath.section] objectAtIndex:indexPath.row];
     
     return cell;
@@ -684,7 +704,7 @@ didReceiveResponse:(NSURLResponse *)response
     UIFont *font;
     
     font = [UIFont boldSystemFontOfSize:15];
-    size = CGSizeMake(220, 1000);
+    size = CGSizeMake(210, 1000);
     value = [text sizeWithFont:font constrainedToSize:size lineBreakMode:UILineBreakModeCharacterWrap];
     
     return value;
