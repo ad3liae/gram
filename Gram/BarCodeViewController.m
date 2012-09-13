@@ -217,7 +217,7 @@
             else
             {
                 isRegenerate = YES;
-                imageView.image = [self createCodeFromString:[data objectForKey:@"text"] codeFormat:kBarcodeFormatQRCode width:280 height:280];
+                imageView.image = [self createCodeFromString:[self convertString:[data objectForKey:@"text"] category:[data objectForKey:@"category"] format:[GramContext get]->exportMode] codeFormat:kBarcodeFormatQRCode width:280 height:280];
             }
             branch = [GramContext get]->exportMode;
             [[values objectAtIndex:0] addObject:branch];
@@ -289,7 +289,7 @@
     if ([GramContext get]->generated == nil)
     {
         NSString *string = [GramContext get]->encodeString;
-        [self createCodeFromString:string codeFormat:kBarcodeFormatQRCode width:280 height:280];
+        [self createCodeFromString:[self convertString:string category:[GramContext get]->exportCondition format:[self getDefaultCondition:[GramContext get]->exportCondition]] codeFormat:kBarcodeFormatQRCode width:280 height:280];
     }
     
     NSDictionary *data = [GramContext get]->generated;
@@ -403,13 +403,60 @@
     // Dispose of any resources that can be recreated.
 }
 
+- (NSString *)getDefaultCondition:(NSString *)condition
+{
+    if ([condition isEqualToString:@"場所"])
+    {
+        return @"WGS84";
+    }
+    else if ([condition isEqualToString:@"連絡先"])
+    {
+        return @"vCard";
+    }
+    else if ([condition isEqualToString:@"イベント"])
+    {
+        return @"iCalendar";
+    }
+    return @"標準";
+}
 
-- (NSString *)convertString:(NSString *)string category:(NSString *)category format:(NSString *)format
+- (NSString *)convertString:(NSString *)origin category:(NSString *)category format:(NSString *)format
 {
     NSString *tmp = nil;
+    NSString *string = [NSString stringWithFormat:@"%@", origin];
     if ([category isEqualToString:@"連絡先"])
     {
-        if ([format isEqualToString:@"au/Softbank"])
+        if ([format isEqualToString:@"meCard"] || [format isEqualToString:@"docomo"])
+        {
+            tmp = [(NSString *)[string matchWithPattern:@"\nN:[^ \t\r\n　]+"] matchWithPattern:@"\nN:" replace:@""];
+            NSArray *name = [tmp componentsSeparatedByString:@";"];
+            NSArray *sound = [NSArray arrayWithObjects:[(NSString *)[string matchWithPattern:@"\nX-PHONETIC-LAST-NAME:[^ \t\r\n　]+"] matchWithPattern:@"\nX-PHONETIC-LAST-NAME:" replace:@""], [(NSString *)[string matchWithPattern:@"\nX-PHONETIC-FIRST-NAME:[^ \t\r\n　]+"] matchWithPattern:@"\nX-PHONETIC-FIRST-NAME:" replace:@""], nil];
+            string = [[string matchWithPattern:@"\nitem[0-9]+.[^;]+\n" replace:@"\n"] matchWithPattern:@"\nitem[0-9]+." replace:@"\n"];
+            //[HOME|WORK|PREF|VOICE|FAX|MSG|CELL|PAGER|BBS|MODEM|CAR|ISDN|VIDEO|PCS];
+            NSMutableArray *emails = [NSMutableArray array];
+            while ([string matchWithPattern:@"EMAIL;"]) {
+                [emails addObject:[[string matchWithPattern:@"\nEMAIL;[^\t\r\n]+"] matchWithPattern:@"\nEMAIL.*:" replace:@""]];
+                NSString *match = [string matchWithPattern:@"\nEMAIL;[^\t\r\n]+"];
+                string = [string matchWithPattern:[NSString stringWithFormat:@"%@", match] replace:@"\n"];
+            }
+            NSMutableArray *tels = [NSMutableArray array];
+            while ([string matchWithPattern:@"TEL;"]) {
+                [tels addObject:[[string matchWithPattern:@"\nTEL;[^\t\r\n]+"] matchWithPattern:@"\nTEL.*:" replace:@""]];
+                NSString *match = [string matchWithPattern:@"\nTEL;[^\t\r\n]+"];
+                string = [string matchWithPattern:[NSString stringWithFormat:@"%@", match] replace:@"\n"];
+            }
+            tmp = [NSString stringWithFormat:@"MECARD:N:%@,%@;SOUND:%@,%@;", [name objectAtIndex:1], [name objectAtIndex:0], [sound objectAtIndex:0], [sound objectAtIndex:1]];
+            for (NSString *tel in tels)
+            {
+                tmp = [NSString stringWithFormat:@"%@TEL:%@;", tmp, tel];
+            }
+            for (NSString *email in emails)
+            {
+                tmp = [NSString stringWithFormat:@"%@EMAIL:%@;", tmp, email];
+            }
+            tmp = [NSString stringWithFormat:@"%@;", tmp];
+        }
+        else if ([format isEqualToString:@"au/Softbank"])
         {
             tmp = [(NSString *)[string matchWithPattern:@"\nN:[^ \t\r\n　]+"] matchWithPattern:@"\nN:" replace:@""];
             NSArray *array = [tmp componentsSeparatedByString:@";"];
@@ -417,17 +464,33 @@
             NSString *sound = [NSString stringWithFormat:@"%@ %@",
                                [(NSString *)[string matchWithPattern:@"\nX-PHONETIC-LAST-NAME:[^ \t\r\n　]+"] matchWithPattern:@"\nX-PHONETIC-LAST-NAME:" replace:@""], [(NSString *)[string matchWithPattern:@"\nX-PHONETIC-FIRST-NAME:[^ \t\r\n　]+"] matchWithPattern:@"\nX-PHONETIC-FIRST-NAME:" replace:@""]];
             tmp = [NSString stringWithFormat:@"MEMORY:\nNAME1:%@\nNAME2:%@", name, sound];
-        }
-        else if ([format isEqualToString:@"docomo"])
-        {
-            tmp = [(NSString *)[string matchWithPattern:@"\nN:[^ \t\r\n　]+"] matchWithPattern:@"\nN:" replace:@""];
-            NSArray *name = [tmp componentsSeparatedByString:@";"];
-            NSArray *sound = [NSArray arrayWithObjects:[(NSString *)[string matchWithPattern:@"\nX-PHONETIC-LAST-NAME:[^ \t\r\n　]+"] matchWithPattern:@"\nX-PHONETIC-LAST-NAME:" replace:@""], [(NSString *)[string matchWithPattern:@"\nX-PHONETIC-FIRST-NAME:[^ \t\r\n　]+"] matchWithPattern:@"\nX-PHONETIC-FIRST-NAME:" replace:@""], nil];
-            tmp = [NSString stringWithFormat:@"MECARD:N:%@,%@;SOUND:%@,%@;;", [name objectAtIndex:0], [name objectAtIndex:1], [sound objectAtIndex:0], [sound objectAtIndex:1]];
+            string = [[string matchWithPattern:@"\nitem[0-9]+.[^;]+\n" replace:@"\n"] matchWithPattern:@"\nitem[0-9]+." replace:@"\n"];
+            NSMutableArray *emails = [NSMutableArray array];
+            while ([string matchWithPattern:@"EMAIL;"]) {
+                [emails addObject:[[string matchWithPattern:@"\nEMAIL;[^\t\r\n]+"] matchWithPattern:@"\nEMAIL.*:" replace:@""]];
+                NSString *match = [string matchWithPattern:@"\nEMAIL;[^\t\r\n]+"];
+                string = [string matchWithPattern:[NSString stringWithFormat:@"%@", match] replace:@"\n"];
+            }
+            NSMutableArray *tels = [NSMutableArray array];
+            while ([string matchWithPattern:@"TEL;"]) {
+                [tels addObject:[[string matchWithPattern:@"\nTEL;[^\t\r\n]+"] matchWithPattern:@"\nTEL.*:" replace:@""]];
+                NSString *match = [string matchWithPattern:@"\nTEL;[^\t\r\n]+"];
+                string = [string matchWithPattern:[NSString stringWithFormat:@"%@", match] replace:@"\n"];
+            }
+            NSInteger index = 0;
+            for (NSString *tel in tels)
+            {
+                tmp = [NSString stringWithFormat:@"%@\nTEL%d:%@", tmp, ++index, tel];
+            }
+            index = 0;
+            for (NSString *email in emails)
+            {
+                tmp = [NSString stringWithFormat:@"%@\nMAIL%d:%@", tmp, ++index, email];
+            }
         }
         else
         {
-            return string;
+            tmp = [[string matchWithPattern:@"\nitem[0-9]+.[^;]+\n" replace:@"\n"] matchWithPattern:@"\nitem[0-9]+." replace:@"\n"];
         }
         return tmp;
     }
@@ -566,7 +629,7 @@
 {
     if (string && ![string isEqualToString:@""])
     {
-        NSLog(@"%@", string);
+        //NSLog(@"encode %@", string);
         ZXMultiFormatWriter *writer = [ZXMultiFormatWriter writer];
         ZXEncodeHints *hints = [ZXEncodeHints new];
         hints.encoding = NSUTF8StringEncoding;
@@ -721,14 +784,14 @@
                                                 error:&error];
     if (error != nil)
     {
-        NSLog(@"%@", error);
+        //NSLog(@"%@", error);
     }
     else
     {
         NSTextCheckingResult *match = [regexp firstMatchInString:self options:0 range:NSMakeRange(0, self.length)];
         if (match.numberOfRanges > 0)
         {
-            NSLog(@"%@", [self substringWithRange:[match rangeAtIndex:0]]);
+            //NSLog(@"%@", [self substringWithRange:[match rangeAtIndex:0]]);
             return [self substringWithRange:[match rangeAtIndex:0]];
         }
     }
@@ -745,14 +808,14 @@
                                                 error:&error];
     if (error != nil)
     {
-        NSLog(@"%@", error);
+        //NSLog(@"%@", error);
     }
     else
     {
         NSTextCheckingResult *match = [regexp firstMatchInString:self options:options range:NSMakeRange(0, self.length)];
         if (match.numberOfRanges > 0)
         {
-            NSLog(@"%@", [self substringWithRange:[match rangeAtIndex:0]]);
+            //NSLog(@"%@", [self substringWithRange:[match rangeAtIndex:0]]);
             return [self substringWithRange:[match rangeAtIndex:0]];
         }
     }
@@ -773,7 +836,7 @@
                                        range:NSMakeRange(0,self.length)
                                 withTemplate:replace];
     
-    NSLog(@"%@",replaced);
+    //NSLog(@"%@",replaced);
     return replaced;
 }
 
@@ -790,7 +853,7 @@
                                        range:NSMakeRange(0,self.length)
                                 withTemplate:replace];
     
-    NSLog(@"%@",replaced);
+    //NSLog(@"%@",replaced);
     return replaced;
 }
 
