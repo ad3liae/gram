@@ -698,6 +698,8 @@
     return nil;
 }
 
+#pragma mark - action sheet delegate
+
 - (IBAction)tapAction:(id)sender
 {
     UIActionSheet *actionSheet = [[UIActionSheet alloc]

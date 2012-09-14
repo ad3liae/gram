@@ -31,6 +31,8 @@
     NSString *advice;
     NSString *content;
     CGRect frame;
+    BOOL isAppeared;
+    CGSize blockSize;
 }
 
 @end
@@ -50,6 +52,7 @@
     self.view.backgroundColor = [UIColor scrollViewTexturedBackgroundColor];
     self.title = @"インポート";
     
+    isAppeared = NO;
     if (![_phase isEqualToString:@"history"])
     {
         [self build];
@@ -58,10 +61,11 @@
 
 - (void)viewWillAppear:(BOOL)animated
 {
-    condition = @"URL";
-    labels = [NSMutableArray arrayWithObjects:[NSMutableArray array], nil];
-    values = [NSMutableArray arrayWithObjects:[NSMutableArray array], nil];
-    NSLog(@"viewWillAppear");
+    condition = [GramContext get]->exportCondition;
+    labels = [NSMutableArray array];
+    values = [NSMutableArray array];
+    
+    isAppeared = NO;
     NSDictionary *data = nil;
     if ([_phase isEqualToString:@"history"])
     {
@@ -81,7 +85,7 @@
         imageView.image = image;
         [imageView setContentMode:UIViewContentModeScaleToFill];
         [self.tableView addSubview:imageView];
-        CGSize blockSize = [self calculateLabelBlockSize:content frameSize:320 - 140 * (ratio < 1 ? ratio : 1) - 60];
+        blockSize = [self calculateLabelBlockSize:content frameSize:320 - 140 * (ratio < 1 ? ratio : 1) - 60];
         
         UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(140 * (ratio < 1 ? ratio : 1) + 40, 20, 320 - 140 * (ratio < 1 ? ratio : 1) - 60, blockSize.height)];
         label.numberOfLines = 0;
@@ -98,19 +102,8 @@
         url = [[data objectForKey:@"text"] matchWithPattern:@"https?:\\/\\/[^ \t\r\n;　]+"];
         if (url != nil)
         {
-            [[labels objectAtIndex:0] addObject:@"URL"];
-            [[values objectAtIndex:0] addObject:[url copy]];
-            [self.tableView reloadData];
-            return;
-        }
-        
-        NSString *tel = [[data objectForKey:@"text"] matchWithPattern:@"tel:[^ \t\r\n:;　]+" options:NSRegularExpressionCaseInsensitive];
-        if (tel != nil)
-        {
-            tel = [tel matchWithPattern:@"tel:" replace:@"" options:NSRegularExpressionCaseInsensitive];
-            [[labels objectAtIndex:0] addObject:@"電話番号"];
-            [[values objectAtIndex:0] addObject:[tel copy]];
-            //[[UIApplication sharedApplication] openURL:[NSURL URLWithString:tel]];
+            [labels addObject:[NSMutableArray arrayWithObject:@"URL"]];
+            [values addObject:[NSMutableArray arrayWithObject:url]];
         }
         
         NSString *sms = [[data objectForKey:@"text"] matchWithPattern:@"smsto:[^ \t\r\n:;　]+" options:NSRegularExpressionCaseInsensitive];
@@ -119,10 +112,8 @@
             sms = [sms matchWithPattern:@"smsto:" replace:@"" options:NSRegularExpressionCaseInsensitive];
             NSString *message = [[data objectForKey:@"text"] matchWithPattern:@"smsto:[^ \t\r\n;　]+" options:NSRegularExpressionCaseInsensitive];
             message = [message matchWithPattern:@"smsto:[0-9]*:" replace:@"" options:NSRegularExpressionCaseInsensitive];
-            [[labels objectAtIndex:0] addObject:@"電話番号"];
-            [[values objectAtIndex:0] addObject:[sms copy]];
-            [[labels objectAtIndex:0] addObject:@"メッセージ"];
-            [[values objectAtIndex:0] addObject:[message copy]];
+            [labels addObject:[NSMutableArray arrayWithObjects:@"電話番号", @"メッセージ", nil]];
+            [values addObject:[NSMutableArray arrayWithObjects:sms, message, nil]];
             //[[UIApplication sharedApplication] openURL:[NSURL URLWithString:[NSString stringWithFormat:@"sms:%@", sms]]];
         }
         NSString *mail = [[data objectForKey:@"text"] matchWithPattern:@"mailto:[^ \t\r\n;　]+" options:NSRegularExpressionCaseInsensitive];
@@ -148,12 +139,8 @@
             {
                 subject = @"";
             }
-            [[labels objectAtIndex:0] addObject:@"Eメール"];
-            [[values objectAtIndex:0] addObject:[mail copy]];
-            [[labels objectAtIndex:0] addObject:@"件名"];
-            [[values objectAtIndex:0] addObject:[subject copy]];
-            [[labels objectAtIndex:0] addObject:@"本文"];
-            [[values objectAtIndex:0] addObject:[body copy]];
+            [labels addObject:[NSMutableArray arrayWithObjects:@"Eメール", @"件名", @"本文", nil]];
+            [values addObject:[NSMutableArray arrayWithObjects:mail, subject, body, nil]];
             /*
             if (![body isEqualToString:@""] || ![subject isEqualToString:@""])
             {
@@ -168,8 +155,38 @@
             return;
         }
         
-        [[labels objectAtIndex:0] addObject:@"テキスト"];
-        [[values objectAtIndex:0] addObject:[data objectForKey:@"text"]];
+        NSString *tel = [[data objectForKey:@"text"] matchWithPattern:@"tel:[^ \t\r\n:;　]+" options:NSRegularExpressionCaseInsensitive];
+        if (tel != nil)
+        {
+            tel = [tel matchWithPattern:@"tel:" replace:@"" options:NSRegularExpressionCaseInsensitive];
+            [labels addObject:[NSMutableArray arrayWithObject:@"電話番号"]];
+            [values addObject:[NSMutableArray arrayWithObject:tel]];
+            //[[UIApplication sharedApplication] openURL:[NSURL URLWithString:tel]];
+        }
+        
+        NSString *mailAddress = [(NSString *)[[data objectForKey:@"text"] matchWithPattern:@"email:[^ \t\r\n;　]+" options:NSRegularExpressionCaseInsensitive] matchWithPattern:@"email:" replace:@"" options:NSRegularExpressionCaseInsensitive];
+        
+        if (mailAddress != nil)
+        {
+            if (tel != nil)
+            {
+                [[labels lastObject] addObject:@"Eメール"];
+                [[values lastObject ] addObject:mailAddress];
+            }
+            else
+            {
+                [labels addObject:[NSMutableArray arrayWithObject:@"Eメール"]];
+                [values addObject:[NSMutableArray arrayWithObject:mailAddress]];
+            }
+        }
+        
+        if ([labels count] == 0)
+        {
+            [labels addObject:[NSMutableArray arrayWithObject:@"テキスト"]];
+            [values addObject:[NSMutableArray arrayWithObject:[data objectForKey:@"text"]]];
+        }
+        
+        [labels addObject:[NSMutableArray arrayWithObjects:@"Eメールで送信", @"ツイッターで共有", @"フェイスブックで共有", @"クリップボードにコピー", nil]];
         //NSString *string = [NSString stringWithFormat:@"http://www.amazon.co.jp/s/ref=nb_sb_noss_2?__mk_ja_JP=%@&url=search-alias%%3Daps&field-keywords=%@&x=0&Ay=0", [data objectForKey:@"text"], [data objectForKey:@"text"]];
         //NSLog(@"%@", string);
         //NSURL *path = [NSURL URLWithString:string];
@@ -206,22 +223,22 @@
 
 -(void)build
 {
-    condition = @"URL";
-    labels = [NSMutableArray arrayWithObjects:[NSMutableArray array], nil];
-    values = [NSMutableArray arrayWithObjects:[NSMutableArray array], nil];
+    condition = [GramContext get]->exportCondition;
+    labels = [NSMutableArray array];
+    values = [NSMutableArray array];
     
     NSDictionary *data = [GramContext get]->captured;
     
     if (data != nil)
     {
-        content = [NSString stringWithFormat:@"バーコードタイプ\n%@\n\n内容\n%@", [self formatFromId:[data objectForKey:@"format"]], [data objectForKey:@"text"]];
+        content = [NSString stringWithFormat:@"コード種別\n%@\n\n内容\n%@", [self formatFromId:[data objectForKey:@"format"]], [data objectForKey:@"text"]];
         UIImage *image = [UIImage imageWithData:[data objectForKey:@"image"]];
         CGFloat ratio = image.size.width / image.size.height;
         UIImageView *imageView = [[UIImageView alloc] initWithFrame:CGRectMake(20, 20, 140 * (ratio < 1 ? ratio : 1), 140 * (ratio < 1 ? 1 : ratio))];
         imageView.image = image;
         [imageView setContentMode:UIViewContentModeScaleToFill];
         [self.tableView addSubview:imageView];
-        CGSize blockSize = [self calculateLabelBlockSize:content frameSize:320 - 140 * (ratio < 1 ? ratio : 1) - 60];
+        blockSize = [self calculateLabelBlockSize:content frameSize:320 - 140 * (ratio < 1 ? ratio : 1) - 60];
         
         UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(140 * (ratio < 1 ? ratio : 1) + 40, 20, 320 - 140 * (ratio < 1 ? ratio : 1) - 60, blockSize.height)];
         label.numberOfLines = 0;
@@ -238,19 +255,8 @@
         url = [[data objectForKey:@"text"] matchWithPattern:@"https?:\\/\\/[^ \t\r\n;　]+"];
         if (url != nil)
         {
-            [[labels objectAtIndex:0] addObject:@"URL"];
-            [[values objectAtIndex:0] addObject:[url copy]];
-            [self.tableView reloadData];
-            return;
-        }
-        
-        NSString *tel = [[data objectForKey:@"text"] matchWithPattern:@"tel:[^ \t\r\n:;　]+" options:NSRegularExpressionCaseInsensitive];
-        if (tel != nil)
-        {
-            tel = [tel matchWithPattern:@"tel:" replace:@"" options:NSRegularExpressionCaseInsensitive];
-            [[labels objectAtIndex:0] addObject:@"電話番号"];
-            [[values objectAtIndex:0] addObject:[tel copy]];
-            //[[UIApplication sharedApplication] openURL:[NSURL URLWithString:tel]];
+            [labels addObject:[NSMutableArray arrayWithObject:@"URL"]];
+            [values addObject:[NSMutableArray arrayWithObject:url]];
         }
         
         NSString *sms = [[data objectForKey:@"text"] matchWithPattern:@"smsto:[^ \t\r\n:;　]+" options:NSRegularExpressionCaseInsensitive];
@@ -259,17 +265,16 @@
             sms = [sms matchWithPattern:@"smsto:" replace:@"" options:NSRegularExpressionCaseInsensitive];
             NSString *message = [[data objectForKey:@"text"] matchWithPattern:@"smsto:[^ \t\r\n;　]+" options:NSRegularExpressionCaseInsensitive];
             message = [message matchWithPattern:@"smsto:[0-9]*:" replace:@"" options:NSRegularExpressionCaseInsensitive];
-            [[labels objectAtIndex:0] addObject:@"電話番号"];
-            [[values objectAtIndex:0] addObject:[sms copy]];
-            [[labels objectAtIndex:0] addObject:@"メッセージ"];
-            [[values objectAtIndex:0] addObject:[message copy]];
-            //[[UIApplication sharedApplication] openURL:[NSURL URLWithString:[NSString stringWithFormat:@"sms:%@", sms]]];
+            [labels addObject:[NSMutableArray arrayWithObjects:@"電話番号", @"メッセージ", nil]];
+            [values addObject:[NSMutableArray arrayWithObjects:sms, message, nil]];
         }
         NSString *mail = [[data objectForKey:@"text"] matchWithPattern:@"mailto:[^ \t\r\n;　]+" options:NSRegularExpressionCaseInsensitive];
+        NSString *body = nil;
+        NSString *subject = nil;
         if (mail != nil)
         {
             mail = [mail matchWithPattern:@"MAILTO:" replace:@"" options:NSRegularExpressionCaseInsensitive];
-            NSString *body = [[data objectForKey:@"text"] matchWithPattern:@"body:[^ \t\r\n;　]+" options:NSRegularExpressionCaseInsensitive];
+            body = [[data objectForKey:@"text"] matchWithPattern:@"body:[^ \t\r\n;　]+" options:NSRegularExpressionCaseInsensitive];
             if (body != nil)
             {
                 body = [body matchWithPattern:@"BODY:" replace:@"" options:NSRegularExpressionCaseInsensitive];
@@ -279,7 +284,7 @@
                 body = @"";
             }
             
-            NSString *subject = [[data objectForKey:@"text"] matchWithPattern:@"subject:[^ \t\r\n;　]+" options:NSRegularExpressionCaseInsensitive];
+            subject = [[data objectForKey:@"text"] matchWithPattern:@"subject:[^ \t\r\n;　]+" options:NSRegularExpressionCaseInsensitive];
             if (subject != nil)
             {
                 subject = [subject matchWithPattern:@"SUBJECT:" replace:@"" options:NSRegularExpressionCaseInsensitive];
@@ -288,12 +293,8 @@
             {
                 subject = @"";
             }
-            [[labels objectAtIndex:0] addObject:@"Eメール"];
-            [[values objectAtIndex:0] addObject:[mail copy]];
-            [[labels objectAtIndex:0] addObject:@"件名"];
-            [[values objectAtIndex:0] addObject:[subject copy]];
-            [[labels objectAtIndex:0] addObject:@"本文"];
-            [[values objectAtIndex:0] addObject:[body copy]];
+            [labels addObject:[NSMutableArray arrayWithObjects:@"Eメール", @"件名", @"本文", nil]];
+            [values addObject:[NSMutableArray arrayWithObjects:mail, subject, body, nil]];
             /*
              if (![body isEqualToString:@""] || ![subject isEqualToString:@""])
              {
@@ -308,8 +309,38 @@
             return;
         }
         
-        [[labels objectAtIndex:0] addObject:@"テキスト"];
-        [[values objectAtIndex:0] addObject:[data objectForKey:@"text"]];
+        NSString *tel = [[data objectForKey:@"text"] matchWithPattern:@"tel:[^ \t\r\n:;　]+" options:NSRegularExpressionCaseInsensitive];
+        if (tel != nil)
+        {
+            tel = [tel matchWithPattern:@"tel:" replace:@"" options:NSRegularExpressionCaseInsensitive];
+            [labels addObject:[NSMutableArray arrayWithObject:@"電話番号"]];
+            [values addObject:[NSMutableArray arrayWithObject:tel]];
+        }
+        
+        NSString *mailAddress = [(NSString *)[[data objectForKey:@"text"] matchWithPattern:@"email:[^ \t\r\n;　]+" options:NSRegularExpressionCaseInsensitive] matchWithPattern:@"email:" replace:@"" options:NSRegularExpressionCaseInsensitive];
+        
+        if (mailAddress != nil)
+        {
+            if (tel != nil)
+            {
+                [[labels lastObject] addObject:@"Eメール"];
+                [[values lastObject ] addObject:mailAddress];
+            }
+            else
+            {
+                [labels addObject:[NSMutableArray arrayWithObject:@"Eメール"]];
+                [values addObject:[NSMutableArray arrayWithObject:mailAddress]];
+            }
+        }
+        
+        if ([labels count] == 0)
+        {
+            [labels addObject:[NSMutableArray arrayWithObject:@"テキスト"]];
+            [values addObject:[NSMutableArray arrayWithObject:[data objectForKey:@"text"]]];
+        }
+        
+        [labels addObject:[NSMutableArray arrayWithObjects:@"Eメールで送信", @"ツイッターで共有", @"フェイスブックで共有", @"クリップボードにコピー", nil]];
+        
         //NSString *string = [NSString stringWithFormat:@"http://www.amazon.co.jp/s/ref=nb_sb_noss_2?__mk_ja_JP=%@&url=search-alias%%3Daps&field-keywords=%@&x=0&Ay=0", [data objectForKey:@"text"], [data objectForKey:@"text"]];
         //NSLog(@"%@", string);
         //NSURL *path = [NSURL URLWithString:string];
@@ -323,6 +354,36 @@
         //http://www.amazon.co.jp/gp/search/?__mk_ja_JP=%83J%83%5E%83J%83i&url=search-alias%3D【カテゴリー名】&field-keywords=【商品名】
         //apsでall
         //http://www.amazon.co.jp/s/ref=nb_sb_noss_2?__mk_ja_JP=%s&url=search-alias%3Daps&field-keywords=%s&x=0&Ay=0
+        
+        
+        NSUserDefaults *settings = [NSUserDefaults standardUserDefaults];
+        if ([settings boolForKey:@"AUTOMATIC_MODE"] == YES)
+        {
+            if (url != nil)
+            {
+                [[UIApplication sharedApplication] openURL:[NSURL URLWithString:url]];
+            }
+            else if (mail != nil)
+            {
+                if (![body isEqualToString:@""] || ![subject isEqualToString:@""])
+                {
+                    NSLog(@"%@", [NSString stringWithFormat:@"mailto:%@?subject=%@&body=%@", mail, subject, body]);
+                    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:[[NSString stringWithFormat:@"mailto:%@?subject=%@&body=%@", mail, subject, body] stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]]];
+                }
+                else
+                {
+                    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:[[NSString stringWithFormat:@"mailto:%@", mail] stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]]];
+                }
+            }
+            else if (sms != nil)
+            {
+                [[UIApplication sharedApplication] openURL:[NSURL URLWithString:[NSString stringWithFormat:@"sms:%@", sms]]];
+            }
+            /*else if (tel != nil)
+            {
+                [[UIApplication sharedApplication] openURL:[NSURL URLWithString:tel]];
+            }*/
+        }
     }
 }
 
@@ -337,7 +398,6 @@
 
 - (void)viewDidAppear:(BOOL)animated
 {
-    NSLog(@"viewDidAppear");
     UITabBarWithAdController *tabBar = (UITabBarWithAdController *)self.tabBarController;
     if (tabBar.delegate != self)
     {
@@ -359,16 +419,22 @@
         }
     }
     
-    if (url != nil)
+    if (isAppeared == NO)
     {
-        NSURLRequest* request = [NSURLRequest requestWithURL:[NSURL URLWithString:url]];
-        NSURLConnection *connection=[[NSURLConnection alloc] initWithRequest:request delegate:self];
-        if (connection)
+        if (url != nil)
         {
-            NSLog(@"start loading");
-            receivedData = [NSMutableData data];
+            NSURLRequest* request = [NSURLRequest requestWithURL:[NSURL URLWithString:url]];
+            NSURLConnection *connection=[[NSURLConnection alloc] initWithRequest:request delegate:self];
+            if (connection)
+            {
+                NSLog(@"start loading");
+                completed = NO;
+                redirected = NO;
+                receivedData = [NSMutableData data];
+            }
         }
     }
+    isAppeared = YES;
 }
 
 - (void)didReceiveMemoryWarning
@@ -605,7 +671,7 @@ didReceiveResponse:(NSURLResponse *)response
         }
         else
         {
-            [[values objectAtIndex:0] addObject:@"問題は検知しませんでした"];
+            [[values objectAtIndex:0] addObject:@"問題なし"];
         }
         NSIndexPath *indexPath = [NSIndexPath indexPathForRow:([[labels objectAtIndex:0] count] - 1) inSection:0];
         NSArray *indexPaths = [NSArray arrayWithObjects:indexPath, nil];
@@ -657,7 +723,6 @@ didReceiveResponse:(NSURLResponse *)response
 {
     if (section == 0)
     {
-        CGSize blockSize = [self calculateLabelBlockSize:content];
         if (blockSize.height > 160)
         {
             return blockSize.height + 40;
@@ -676,7 +741,8 @@ didReceiveResponse:(NSURLResponse *)response
     {
         case 0:
             height = [self calculateTextBlockSize:[[values objectAtIndex:0] objectAtIndex:indexPath.row]].height;
-            return ((44 - 25) > height ? 44 : height + 25);
+            
+            return (19 > height ? 44 : height + 25);
     }
     
     return tableView.rowHeight;
@@ -684,15 +750,23 @@ didReceiveResponse:(NSURLResponse *)response
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"detailCell"];
-    
-    UILabel *label = (UILabel *)[cell viewWithTag:1];
-    label.text = [[labels objectAtIndex:indexPath.section] objectAtIndex:indexPath.row];
-    
-    UILabel *detail = (UILabel *)[cell viewWithTag:2];
-    detail.frame = CGRectMake(83, 12, 210, [self calculateTextBlockSize:[[values objectAtIndex:indexPath.section] objectAtIndex:indexPath.row]].height);
-    detail.lineBreakMode = UILineBreakModeCharacterWrap;
-    detail.text = [[values objectAtIndex:indexPath.section] objectAtIndex:indexPath.row];
+    UITableViewCell *cell = nil;
+    @try {
+        NSString *value = [[values objectAtIndex:indexPath.section] objectAtIndex:indexPath.row];
+        cell = [tableView dequeueReusableCellWithIdentifier:@"detailCell"];
+        
+        UILabel *label = (UILabel *)[cell viewWithTag:1];
+        label.text = [[labels objectAtIndex:indexPath.section] objectAtIndex:indexPath.row];
+        
+        UILabel *detail = (UILabel *)[cell viewWithTag:2];
+        detail.frame = CGRectMake(83, 12, 210, [self calculateTextBlockSize:[[values objectAtIndex:indexPath.section] objectAtIndex:indexPath.row]].height);
+        detail.lineBreakMode = UILineBreakModeCharacterWrap;
+        detail.text = value;
+    }
+    @catch (NSException *exception) {
+        cell = [tableView dequeueReusableCellWithIdentifier:@"selectableCell"];
+        cell.textLabel.text = [[labels objectAtIndex:indexPath.section] objectAtIndex:indexPath.row];
+    }
     
     return cell;
 }
@@ -714,13 +788,7 @@ didReceiveResponse:(NSURLResponse *)response
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    // Navigation logic may go here. Create and push another view controller.
-    /*
-     <#DetailViewController#> *detailViewController = [[<#DetailViewController#> alloc] initWithNibName:@"<#Nib name#>" bundle:nil];
-     // ...
-     // Pass the selected object to the new view controller.
-     [self.navigationController pushViewController:detailViewController animated:YES];
-     */
+    [self.tableView deselectRowAtIndexPath:indexPath animated:YES];
 }
 
 -(BOOL)tabBarController:(UITabBarController*)tabBarController shouldSelectViewController:(UIViewController *)viewController
@@ -728,7 +796,6 @@ didReceiveResponse:(NSURLResponse *)response
     NSUInteger index = [tabBarController.viewControllers indexOfObject:viewController];
     if (![_phase isEqualToString:@"history"])
     {
-        NSLog(@"%d", index);
         if (index == 0)
         {
             [GramContext get]->captured = nil;
@@ -740,6 +807,28 @@ didReceiveResponse:(NSURLResponse *)response
         }
     }
     return YES;
+}
+
+#pragma mark - action sheet delegate
+
+- (IBAction)tapAction:(id)sender
+{
+    UIActionSheet *actionSheet = [[UIActionSheet alloc]
+                                  initWithTitle:@""
+                                  delegate:self
+                                  cancelButtonTitle:@"キャンセル"
+                                  destructiveButtonTitle:nil
+                                  otherButtonTitles:@"画像を保存する", @"コードを表示する", nil];
+    [actionSheet showInView:self.tabBarController.view];
+}
+
+- (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+    switch (buttonIndex)
+    {
+        default:
+            break;
+    }
 }
 
 #pragma mark - custom delegete

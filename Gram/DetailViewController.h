@@ -13,6 +13,6 @@
 @property (nonatomic, retain) NSString *phase;
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
 
--(void)build;
+- (IBAction)tapAction:(id)sender;
 
 @end
