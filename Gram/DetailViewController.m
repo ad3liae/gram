@@ -20,7 +20,6 @@
 
 @interface DetailViewController ()
 {
-    NSString *condition;
     NSMutableArray *labels;
     NSMutableArray *values;
     NSMutableData *receivedData;
@@ -52,154 +51,21 @@
     self.view.backgroundColor = [UIColor scrollViewTexturedBackgroundColor];
     self.title = @"インポート";
     
-    isAppeared = NO;
     if (![_phase isEqualToString:@"history"])
     {
-        [self build];
+        [self buildFromData:[GramContext get]->captured];
     }
 }
 
 - (void)viewWillAppear:(BOOL)animated
 {
-    condition = [GramContext get]->exportCondition;
-    labels = [NSMutableArray array];
-    values = [NSMutableArray array];
-    
-    isAppeared = NO;
-    NSDictionary *data = nil;
     if ([_phase isEqualToString:@"history"])
     {
-        data = [GramContext get]->decodeFromHistory;
+        [self buildFromData:[GramContext get]->decodeFromHistory];
     }
     else
     {
-        data = [GramContext get]->captured;
-    }
-    
-    if (data != nil)
-    {
-        content = [NSString stringWithFormat:@"コード種別\n%@\n\n内容\n%@", [self formatFromId:[data objectForKey:@"format"]], [data objectForKey:@"text"]];
-        UIImage *image = [UIImage imageWithData:[data objectForKey:@"image"]];
-        CGFloat ratio = image.size.width / image.size.height;
-        UIImageView *imageView = [[UIImageView alloc] initWithFrame:CGRectMake(20, 20, 140 * (ratio < 1 ? ratio : 1), 140 * (ratio < 1 ? 1 : ratio))];
-        imageView.image = image;
-        [imageView setContentMode:UIViewContentModeScaleToFill];
-        [self.tableView addSubview:imageView];
-        blockSize = [self calculateLabelBlockSize:content frameSize:320 - 140 * (ratio < 1 ? ratio : 1) - 60];
-        
-        UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(140 * (ratio < 1 ? ratio : 1) + 40, 20, 320 - 140 * (ratio < 1 ? ratio : 1) - 60, blockSize.height)];
-        label.numberOfLines = 0;
-        label.text = content;
-        label.textAlignment = UITextAlignmentLeft;
-        label.lineBreakMode = UILineBreakModeCharacterWrap;
-        label.font = [UIFont boldSystemFontOfSize:14.0];
-        label.shadowOffset = CGSizeMake(0, -1);
-        label.shadowColor = [UIColor darkGrayColor];
-        label.backgroundColor = [UIColor clearColor];
-        label.textColor = [UIColor whiteColor];
-        [self.tableView addSubview:label];
-        
-        url = [[data objectForKey:@"text"] matchWithPattern:@"https?:\\/\\/[^ \t\r\n;　]+"];
-        if (url != nil)
-        {
-            [labels addObject:[NSMutableArray arrayWithObject:@"URL"]];
-            [values addObject:[NSMutableArray arrayWithObject:url]];
-        }
-        
-        NSString *sms = [[data objectForKey:@"text"] matchWithPattern:@"smsto:[^ \t\r\n:;　]+" options:NSRegularExpressionCaseInsensitive];
-        if (sms != nil)
-        {
-            sms = [sms matchWithPattern:@"smsto:" replace:@"" options:NSRegularExpressionCaseInsensitive];
-            NSString *message = [[data objectForKey:@"text"] matchWithPattern:@"smsto:[^ \t\r\n;　]+" options:NSRegularExpressionCaseInsensitive];
-            message = [message matchWithPattern:@"smsto:[0-9]*:" replace:@"" options:NSRegularExpressionCaseInsensitive];
-            [labels addObject:[NSMutableArray arrayWithObjects:@"電話番号", @"メッセージ", nil]];
-            [values addObject:[NSMutableArray arrayWithObjects:sms, message, nil]];
-            //[[UIApplication sharedApplication] openURL:[NSURL URLWithString:[NSString stringWithFormat:@"sms:%@", sms]]];
-        }
-        NSString *mail = [[data objectForKey:@"text"] matchWithPattern:@"mailto:[^ \t\r\n;　]+" options:NSRegularExpressionCaseInsensitive];
-        if (mail != nil)
-        {
-            mail = [mail matchWithPattern:@"MAILTO:" replace:@"" options:NSRegularExpressionCaseInsensitive];
-            NSString *body = [[data objectForKey:@"text"] matchWithPattern:@"body:[^ \t\r\n;　]+" options:NSRegularExpressionCaseInsensitive];
-            if (body != nil)
-            {
-                body = [body matchWithPattern:@"BODY:" replace:@"" options:NSRegularExpressionCaseInsensitive];
-            }
-            else
-            {
-                body = @"";
-            }
-            
-            NSString *subject = [[data objectForKey:@"text"] matchWithPattern:@"subject:[^ \t\r\n;　]+" options:NSRegularExpressionCaseInsensitive];
-            if (subject != nil)
-            {
-                subject = [subject matchWithPattern:@"SUBJECT:" replace:@"" options:NSRegularExpressionCaseInsensitive];
-            }
-            else
-            {
-                subject = @"";
-            }
-            [labels addObject:[NSMutableArray arrayWithObjects:@"Eメール", @"件名", @"本文", nil]];
-            [values addObject:[NSMutableArray arrayWithObjects:mail, subject, body, nil]];
-            /*
-            if (![body isEqualToString:@""] || ![subject isEqualToString:@""])
-            {
-                NSLog(@"%@", [NSString stringWithFormat:@"mailto:%@?subject=%@&body=%@", mail, subject, body]);
-                [[UIApplication sharedApplication] openURL:[NSURL URLWithString:[[NSString stringWithFormat:@"mailto:%@?subject=%@&body=%@", mail, subject, body] stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]]];
-            }
-            else
-            {
-                [[UIApplication sharedApplication] openURL:[NSURL URLWithString:[[NSString stringWithFormat:@"mailto:%@", mail] stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]]];
-            }
-            */
-            return;
-        }
-        
-        NSString *tel = [[data objectForKey:@"text"] matchWithPattern:@"tel:[^ \t\r\n:;　]+" options:NSRegularExpressionCaseInsensitive];
-        if (tel != nil)
-        {
-            tel = [tel matchWithPattern:@"tel:" replace:@"" options:NSRegularExpressionCaseInsensitive];
-            [labels addObject:[NSMutableArray arrayWithObject:@"電話番号"]];
-            [values addObject:[NSMutableArray arrayWithObject:tel]];
-            //[[UIApplication sharedApplication] openURL:[NSURL URLWithString:tel]];
-        }
-        
-        NSString *mailAddress = [(NSString *)[[data objectForKey:@"text"] matchWithPattern:@"email:[^ \t\r\n;　]+" options:NSRegularExpressionCaseInsensitive] matchWithPattern:@"email:" replace:@"" options:NSRegularExpressionCaseInsensitive];
-        
-        if (mailAddress != nil)
-        {
-            if (tel != nil)
-            {
-                [[labels lastObject] addObject:@"Eメール"];
-                [[values lastObject ] addObject:mailAddress];
-            }
-            else
-            {
-                [labels addObject:[NSMutableArray arrayWithObject:@"Eメール"]];
-                [values addObject:[NSMutableArray arrayWithObject:mailAddress]];
-            }
-        }
-        
-        if ([labels count] == 0)
-        {
-            [labels addObject:[NSMutableArray arrayWithObject:@"テキスト"]];
-            [values addObject:[NSMutableArray arrayWithObject:[data objectForKey:@"text"]]];
-        }
-        
-        [labels addObject:[NSMutableArray arrayWithObjects:@"Eメールで送信", @"ツイッターで共有", @"フェイスブックで共有", @"クリップボードにコピー", nil]];
-        //NSString *string = [NSString stringWithFormat:@"http://www.amazon.co.jp/s/ref=nb_sb_noss_2?__mk_ja_JP=%@&url=search-alias%%3Daps&field-keywords=%@&x=0&Ay=0", [data objectForKey:@"text"], [data objectForKey:@"text"]];
-        //NSLog(@"%@", string);
-        //NSURL *path = [NSURL URLWithString:string];
-        //NSURLRequest *req = [NSURLRequest requestWithURL:path];
-        //UIWebView *webView = [[UIWebView alloc] init];
-        //webView.delegate = self;
-        //[webView loadRequest:req];
-        //[self.view addSubview:webView];
-        //[[UIApplication sharedApplication] openURL:[NSURL URLWithString:[[NSString stringWithFormat:@"http://www.google.co.jp/products?q=%@", [data objectForKey:@"text"]] stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]]];
-        //http://www.amazon.co.jp/gp/search/?__mk_ja_JP=%83J%83%5E%83J%83i&field-keywords=
-        //http://www.amazon.co.jp/gp/search/?__mk_ja_JP=%83J%83%5E%83J%83i&url=search-alias%3D【カテゴリー名】&field-keywords=【商品名】
-        //apsでall
-        //http://www.amazon.co.jp/s/ref=nb_sb_noss_2?__mk_ja_JP=%s&url=search-alias%3Daps&field-keywords=%s&x=0&Ay=0
+        [self buildFromData:[GramContext get]->captured];
     }
     
     UITabBarWithAdController *tabBar = (UITabBarWithAdController *)self.tabBarController;
@@ -218,172 +84,6 @@
                                             frame.origin.y,
                                             frame.size.width,
                                             frame.size.height - 93)];
-    }
-}
-
--(void)build
-{
-    condition = [GramContext get]->exportCondition;
-    labels = [NSMutableArray array];
-    values = [NSMutableArray array];
-    
-    NSDictionary *data = [GramContext get]->captured;
-    
-    if (data != nil)
-    {
-        content = [NSString stringWithFormat:@"コード種別\n%@\n\n内容\n%@", [self formatFromId:[data objectForKey:@"format"]], [data objectForKey:@"text"]];
-        UIImage *image = [UIImage imageWithData:[data objectForKey:@"image"]];
-        CGFloat ratio = image.size.width / image.size.height;
-        UIImageView *imageView = [[UIImageView alloc] initWithFrame:CGRectMake(20, 20, 140 * (ratio < 1 ? ratio : 1), 140 * (ratio < 1 ? 1 : ratio))];
-        imageView.image = image;
-        [imageView setContentMode:UIViewContentModeScaleToFill];
-        [self.tableView addSubview:imageView];
-        blockSize = [self calculateLabelBlockSize:content frameSize:320 - 140 * (ratio < 1 ? ratio : 1) - 60];
-        
-        UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(140 * (ratio < 1 ? ratio : 1) + 40, 20, 320 - 140 * (ratio < 1 ? ratio : 1) - 60, blockSize.height)];
-        label.numberOfLines = 0;
-        label.text = content;
-        label.textAlignment = UITextAlignmentLeft;
-        label.lineBreakMode = UILineBreakModeCharacterWrap;
-        label.font = [UIFont boldSystemFontOfSize:14.0];
-        label.shadowOffset = CGSizeMake(0, -1);
-        label.shadowColor = [UIColor darkGrayColor];
-        label.backgroundColor = [UIColor clearColor];
-        label.textColor = [UIColor whiteColor];
-        [self.tableView addSubview:label];
-        
-        url = [[data objectForKey:@"text"] matchWithPattern:@"https?:\\/\\/[^ \t\r\n;　]+"];
-        if (url != nil)
-        {
-            [labels addObject:[NSMutableArray arrayWithObject:@"URL"]];
-            [values addObject:[NSMutableArray arrayWithObject:url]];
-        }
-        
-        NSString *sms = [[data objectForKey:@"text"] matchWithPattern:@"smsto:[^ \t\r\n:;　]+" options:NSRegularExpressionCaseInsensitive];
-        if (sms != nil)
-        {
-            sms = [sms matchWithPattern:@"smsto:" replace:@"" options:NSRegularExpressionCaseInsensitive];
-            NSString *message = [[data objectForKey:@"text"] matchWithPattern:@"smsto:[^ \t\r\n;　]+" options:NSRegularExpressionCaseInsensitive];
-            message = [message matchWithPattern:@"smsto:[0-9]*:" replace:@"" options:NSRegularExpressionCaseInsensitive];
-            [labels addObject:[NSMutableArray arrayWithObjects:@"電話番号", @"メッセージ", nil]];
-            [values addObject:[NSMutableArray arrayWithObjects:sms, message, nil]];
-        }
-        NSString *mail = [[data objectForKey:@"text"] matchWithPattern:@"mailto:[^ \t\r\n;　]+" options:NSRegularExpressionCaseInsensitive];
-        NSString *body = nil;
-        NSString *subject = nil;
-        if (mail != nil)
-        {
-            mail = [mail matchWithPattern:@"MAILTO:" replace:@"" options:NSRegularExpressionCaseInsensitive];
-            body = [[data objectForKey:@"text"] matchWithPattern:@"body:[^ \t\r\n;　]+" options:NSRegularExpressionCaseInsensitive];
-            if (body != nil)
-            {
-                body = [body matchWithPattern:@"BODY:" replace:@"" options:NSRegularExpressionCaseInsensitive];
-            }
-            else
-            {
-                body = @"";
-            }
-            
-            subject = [[data objectForKey:@"text"] matchWithPattern:@"subject:[^ \t\r\n;　]+" options:NSRegularExpressionCaseInsensitive];
-            if (subject != nil)
-            {
-                subject = [subject matchWithPattern:@"SUBJECT:" replace:@"" options:NSRegularExpressionCaseInsensitive];
-            }
-            else
-            {
-                subject = @"";
-            }
-            [labels addObject:[NSMutableArray arrayWithObjects:@"Eメール", @"件名", @"本文", nil]];
-            [values addObject:[NSMutableArray arrayWithObjects:mail, subject, body, nil]];
-            /*
-             if (![body isEqualToString:@""] || ![subject isEqualToString:@""])
-             {
-             NSLog(@"%@", [NSString stringWithFormat:@"mailto:%@?subject=%@&body=%@", mail, subject, body]);
-             [[UIApplication sharedApplication] openURL:[NSURL URLWithString:[[NSString stringWithFormat:@"mailto:%@?subject=%@&body=%@", mail, subject, body] stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]]];
-             }
-             else
-             {
-             [[UIApplication sharedApplication] openURL:[NSURL URLWithString:[[NSString stringWithFormat:@"mailto:%@", mail] stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]]];
-             }
-             */
-            return;
-        }
-        
-        NSString *tel = [[data objectForKey:@"text"] matchWithPattern:@"tel:[^ \t\r\n:;　]+" options:NSRegularExpressionCaseInsensitive];
-        if (tel != nil)
-        {
-            tel = [tel matchWithPattern:@"tel:" replace:@"" options:NSRegularExpressionCaseInsensitive];
-            [labels addObject:[NSMutableArray arrayWithObject:@"電話番号"]];
-            [values addObject:[NSMutableArray arrayWithObject:tel]];
-        }
-        
-        NSString *mailAddress = [(NSString *)[[data objectForKey:@"text"] matchWithPattern:@"email:[^ \t\r\n;　]+" options:NSRegularExpressionCaseInsensitive] matchWithPattern:@"email:" replace:@"" options:NSRegularExpressionCaseInsensitive];
-        
-        if (mailAddress != nil)
-        {
-            if (tel != nil)
-            {
-                [[labels lastObject] addObject:@"Eメール"];
-                [[values lastObject ] addObject:mailAddress];
-            }
-            else
-            {
-                [labels addObject:[NSMutableArray arrayWithObject:@"Eメール"]];
-                [values addObject:[NSMutableArray arrayWithObject:mailAddress]];
-            }
-        }
-        
-        if ([labels count] == 0)
-        {
-            [labels addObject:[NSMutableArray arrayWithObject:@"テキスト"]];
-            [values addObject:[NSMutableArray arrayWithObject:[data objectForKey:@"text"]]];
-        }
-        
-        [labels addObject:[NSMutableArray arrayWithObjects:@"Eメールで送信", @"ツイッターで共有", @"フェイスブックで共有", @"クリップボードにコピー", nil]];
-        
-        //NSString *string = [NSString stringWithFormat:@"http://www.amazon.co.jp/s/ref=nb_sb_noss_2?__mk_ja_JP=%@&url=search-alias%%3Daps&field-keywords=%@&x=0&Ay=0", [data objectForKey:@"text"], [data objectForKey:@"text"]];
-        //NSLog(@"%@", string);
-        //NSURL *path = [NSURL URLWithString:string];
-        //NSURLRequest *req = [NSURLRequest requestWithURL:path];
-        //UIWebView *webView = [[UIWebView alloc] init];
-        //webView.delegate = self;
-        //[webView loadRequest:req];
-        //[self.view addSubview:webView];
-        //[[UIApplication sharedApplication] openURL:[NSURL URLWithString:[[NSString stringWithFormat:@"http://www.google.co.jp/products?q=%@", [data objectForKey:@"text"]] stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]]];
-        //http://www.amazon.co.jp/gp/search/?__mk_ja_JP=%83J%83%5E%83J%83i&field-keywords=
-        //http://www.amazon.co.jp/gp/search/?__mk_ja_JP=%83J%83%5E%83J%83i&url=search-alias%3D【カテゴリー名】&field-keywords=【商品名】
-        //apsでall
-        //http://www.amazon.co.jp/s/ref=nb_sb_noss_2?__mk_ja_JP=%s&url=search-alias%3Daps&field-keywords=%s&x=0&Ay=0
-        
-        
-        NSUserDefaults *settings = [NSUserDefaults standardUserDefaults];
-        if ([settings boolForKey:@"AUTOMATIC_MODE"] == YES)
-        {
-            if (url != nil)
-            {
-                [[UIApplication sharedApplication] openURL:[NSURL URLWithString:url]];
-            }
-            else if (mail != nil)
-            {
-                if (![body isEqualToString:@""] || ![subject isEqualToString:@""])
-                {
-                    NSLog(@"%@", [NSString stringWithFormat:@"mailto:%@?subject=%@&body=%@", mail, subject, body]);
-                    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:[[NSString stringWithFormat:@"mailto:%@?subject=%@&body=%@", mail, subject, body] stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]]];
-                }
-                else
-                {
-                    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:[[NSString stringWithFormat:@"mailto:%@", mail] stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]]];
-                }
-            }
-            else if (sms != nil)
-            {
-                [[UIApplication sharedApplication] openURL:[NSURL URLWithString:[NSString stringWithFormat:@"sms:%@", sms]]];
-            }
-            /*else if (tel != nil)
-            {
-                [[UIApplication sharedApplication] openURL:[NSURL URLWithString:tel]];
-            }*/
-        }
     }
 }
 
@@ -441,140 +141,6 @@
 {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
-}
-
-- (CGSize)calculateLabelBlockSize:(NSString *)text
-{
-    CGSize size;
-    CGSize value;
-    UIFont *font;
-    
-    font = [UIFont boldSystemFontOfSize:14];
-    size = CGSizeMake(210, 1000);
-    value = [text sizeWithFont:font constrainedToSize:size lineBreakMode:UILineBreakModeCharacterWrap];
-    
-    return value;
-}
-
-- (CGSize)calculateLabelBlockSize:(NSString *)text frameSize:(CGFloat)width
-{
-    CGSize size;
-    CGSize value;
-    UIFont *font;
-    
-    font = [UIFont boldSystemFontOfSize:14];
-    size = CGSizeMake(width, 1000);
-    value = [text sizeWithFont:font constrainedToSize:size lineBreakMode:UILineBreakModeCharacterWrap];
-    
-    return value;
-}
-
-- (NSString *)formatFromId:(id)index
-{
-    NSString *number = [NSString stringWithFormat:@"%@", index];
-    if ([number isEqualToString:@"0"])
-    {
-        return @"Aztec";
-    }
-    else if ([number isEqualToString:@"1"])
-    {
-        return @"CODABAR";
-    }
-    else if ([number isEqualToString:@"2"])
-    {
-        return @"Code 39";
-    }
-    else if ([number isEqualToString:@"3"])
-    {
-        return @"Code 93";
-    }
-    else if ([number isEqualToString:@"4"])
-    {
-        return @"Code 128";
-    }
-    else if ([number isEqualToString:@"5"])
-    {
-        return @"Data Matrix";
-    }
-    else if ([number isEqualToString:@"6"])
-    {
-        return @"EAN-8";
-    }
-    else if ([number isEqualToString:@"7"])
-    {
-        return @"EAN-13";
-    }
-    else if ([number isEqualToString:@"8"])
-    {
-        return @"ITF";
-    }
-    else if ([number isEqualToString:@"9"])
-    {
-        return @"MaxiCode";
-    }
-    else if ([number isEqualToString:@"10"])
-    {
-        return @"PDF417";
-    }
-    else if ([number isEqualToString:@"11"])
-    {
-        return @"QR Code";
-    }
-    else if ([number isEqualToString:@"12"])
-    {
-        return @"RSS 14";
-    }
-    else if ([number isEqualToString:@"13"])
-    {
-        return @"RSS EXPANDED";
-    }
-    else if ([number isEqualToString:@"14"])
-    {
-        return @"UPC-A";
-    }
-    else if ([number isEqualToString:@"15"])
-    {
-        return @"UPC-E";
-    }
-    else if ([number isEqualToString:@"16"])
-    {
-        return @"UPC/EAN extension";
-    }
-    
-    return [NSString stringWithFormat:@"%@", index];
-    /** Aztec 2D barcode format. */
-    
-    /** CODABAR 1D format. */
-    
-    /** Code 39 1D format. */
-    
-    /** Code 93 1D format. */
-    
-    /** Code 128 1D format. */
-    
-    /** Data Matrix 2D barcode format. */
-    
-    /** EAN-8 1D format. */
-    
-    /** EAN-13 1D format. */
-    
-    /** ITF (Interleaved Two of Five) 1D format. */
-    
-    /** MaxiCode 2D barcode format. */
-    
-    /** PDF417 format. */
-    
-    /** QR Code 2D barcode format. */
-    
-    /** RSS 14 */
-    
-    /** RSS EXPANDED */
-    
-    /** UPC-A 1D format. */
-    
-    /** UPC-E 1D format. */
-    
-    /** UPC/EAN extension format. Not a stand-alone format. */
 }
 
 #pragma mark - Table view data source
@@ -707,6 +273,273 @@ didReceiveResponse:(NSURLResponse *)response
     }
 }
 
+#pragma mark - custom methods
+
+- (CGSize)calculateLabelBlockSize:(NSString *)text
+{
+    UIFont *font = [UIFont boldSystemFontOfSize:14];
+    CGSize value = [text sizeWithFont:font constrainedToSize:CGSizeMake(210, 1000) lineBreakMode:UILineBreakModeCharacterWrap];
+
+    return value;
+}
+
+- (CGSize)calculateLabelBlockSize:(NSString *)text frameSize:(CGFloat)width
+{
+    UIFont *font = [UIFont boldSystemFontOfSize:14];
+    CGSize value = [text sizeWithFont:font constrainedToSize:CGSizeMake(width, 1000) lineBreakMode:UILineBreakModeCharacterWrap];
+    
+    return value;
+}
+
+- (CGSize)calculateTextBlockSize:(NSString *)text
+{
+    UIFont *font = [UIFont boldSystemFontOfSize:15];
+    CGSize value = [text sizeWithFont:font constrainedToSize:CGSizeMake(210, 1000) lineBreakMode:UILineBreakModeCharacterWrap];
+    
+    return value;
+}
+
+- (NSString *)formatFromId:(id)index
+{
+    NSString *number = [NSString stringWithFormat:@"%@", index];
+    if ([number isEqualToString:@"0"])
+    {
+        return @"Aztec";
+    }
+    else if ([number isEqualToString:@"1"])
+    {
+        return @"CODABAR";
+    }
+    else if ([number isEqualToString:@"2"])
+    {
+        return @"Code 39";
+    }
+    else if ([number isEqualToString:@"3"])
+    {
+        return @"Code 93";
+    }
+    else if ([number isEqualToString:@"4"])
+    {
+        return @"Code 128";
+    }
+    else if ([number isEqualToString:@"5"])
+    {
+        return @"Data Matrix";
+    }
+    else if ([number isEqualToString:@"6"])
+    {
+        return @"EAN-8";
+    }
+    else if ([number isEqualToString:@"7"])
+    {
+        return @"EAN-13";
+    }
+    else if ([number isEqualToString:@"8"])
+    {
+        return @"ITF";
+    }
+    else if ([number isEqualToString:@"9"])
+    {
+        return @"MaxiCode";
+    }
+    else if ([number isEqualToString:@"10"])
+    {
+        return @"PDF417";
+    }
+    else if ([number isEqualToString:@"11"])
+    {
+        return @"QR Code";
+    }
+    else if ([number isEqualToString:@"12"])
+    {
+        return @"RSS 14";
+    }
+    else if ([number isEqualToString:@"13"])
+    {
+        return @"RSS EXPANDED";
+    }
+    else if ([number isEqualToString:@"14"])
+    {
+        return @"UPC-A";
+    }
+    else if ([number isEqualToString:@"15"])
+    {
+        return @"UPC-E";
+    }
+    else if ([number isEqualToString:@"16"])
+    {
+        return @"UPC/EAN extension";
+    }
+    
+    return [NSString stringWithFormat:@"%@", index];
+}
+
+-(void)buildFromData:(NSDictionary *)data
+{
+    isAppeared = NO;
+    labels = [NSMutableArray array];
+    values = [NSMutableArray array];
+    
+    if (data != nil)
+    {
+        content = [NSString stringWithFormat:@"コード種別\n%@\n\n内容\n%@", [self formatFromId:[data objectForKey:@"format"]], [data objectForKey:@"text"]];
+        UIImage *image = [UIImage imageWithData:[data objectForKey:@"image"]];
+        CGFloat ratio = image.size.width / image.size.height;
+        UIImageView *imageView = [[UIImageView alloc] initWithFrame:CGRectMake(20, 20, 140 * (ratio < 1 ? ratio : 1), 140 * (ratio < 1 ? 1 : ratio))];
+        imageView.image = image;
+        [imageView setContentMode:UIViewContentModeScaleToFill];
+        [self.tableView addSubview:imageView];
+        blockSize = [self calculateLabelBlockSize:content frameSize:320 - 140 * (ratio < 1 ? ratio : 1) - 60];
+        
+        UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(140 * (ratio < 1 ? ratio : 1) + 40, 20, 320 - 140 * (ratio < 1 ? ratio : 1) - 60, blockSize.height)];
+        label.numberOfLines = 0;
+        label.text = content;
+        label.textAlignment = UITextAlignmentLeft;
+        label.lineBreakMode = UILineBreakModeCharacterWrap;
+        label.font = [UIFont boldSystemFontOfSize:14.0];
+        label.shadowOffset = CGSizeMake(0, -1);
+        label.shadowColor = [UIColor darkGrayColor];
+        label.backgroundColor = [UIColor clearColor];
+        label.textColor = [UIColor whiteColor];
+        [self.tableView addSubview:label];
+        
+        url = [[data objectForKey:@"text"] matchWithPattern:@"https?:\\/\\/[^ \t\r\n;　]+"];
+        if (url != nil)
+        {
+            [labels addObject:[NSMutableArray arrayWithObject:@"URL"]];
+            [values addObject:[NSMutableArray arrayWithObject:url]];
+        }
+        
+        NSString *sms = [[data objectForKey:@"text"] matchWithPattern:@"smsto:[^ \t\r\n:;　]+" options:NSRegularExpressionCaseInsensitive];
+        if (sms != nil)
+        {
+            sms = [sms matchWithPattern:@"smsto:" replace:@"" options:NSRegularExpressionCaseInsensitive];
+            NSString *message = [[data objectForKey:@"text"] matchWithPattern:@"smsto:[^ \t\r\n;　]+" options:NSRegularExpressionCaseInsensitive];
+            message = [message matchWithPattern:@"smsto:[0-9]*:" replace:@"" options:NSRegularExpressionCaseInsensitive];
+            [labels addObject:[NSMutableArray arrayWithObjects:@"電話番号", @"メッセージ", nil]];
+            [values addObject:[NSMutableArray arrayWithObjects:sms, message, nil]];
+        }
+        NSString *mail = [[data objectForKey:@"text"] matchWithPattern:@"mailto:[^ \t\r\n;　]+" options:NSRegularExpressionCaseInsensitive];
+        NSString *body = nil;
+        NSString *subject = nil;
+        if (mail != nil)
+        {
+            mail = [mail matchWithPattern:@"MAILTO:" replace:@"" options:NSRegularExpressionCaseInsensitive];
+            body = [[data objectForKey:@"text"] matchWithPattern:@"body:[^ \t\r\n;　]+" options:NSRegularExpressionCaseInsensitive];
+            if (body != nil)
+            {
+                body = [body matchWithPattern:@"BODY:" replace:@"" options:NSRegularExpressionCaseInsensitive];
+            }
+            else
+            {
+                body = @"";
+            }
+            
+            subject = [[data objectForKey:@"text"] matchWithPattern:@"subject:[^ \t\r\n;　]+" options:NSRegularExpressionCaseInsensitive];
+            if (subject != nil)
+            {
+                subject = [subject matchWithPattern:@"SUBJECT:" replace:@"" options:NSRegularExpressionCaseInsensitive];
+            }
+            else
+            {
+                subject = @"";
+            }
+            [labels addObject:[NSMutableArray arrayWithObjects:@"Eメール", @"件名", @"本文", nil]];
+            [values addObject:[NSMutableArray arrayWithObjects:mail, subject, body, nil]];
+            /*
+             if (![body isEqualToString:@""] || ![subject isEqualToString:@""])
+             {
+             NSLog(@"%@", [NSString stringWithFormat:@"mailto:%@?subject=%@&body=%@", mail, subject, body]);
+             [[UIApplication sharedApplication] openURL:[NSURL URLWithString:[[NSString stringWithFormat:@"mailto:%@?subject=%@&body=%@", mail, subject, body] stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]]];
+             }
+             else
+             {
+             [[UIApplication sharedApplication] openURL:[NSURL URLWithString:[[NSString stringWithFormat:@"mailto:%@", mail] stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]]];
+             }
+             */
+            return;
+        }
+        
+        NSString *tel = [[data objectForKey:@"text"] matchWithPattern:@"tel:[^ \t\r\n:;　]+" options:NSRegularExpressionCaseInsensitive];
+        if (tel != nil)
+        {
+            tel = [tel matchWithPattern:@"tel:" replace:@"" options:NSRegularExpressionCaseInsensitive];
+            [labels addObject:[NSMutableArray arrayWithObject:@"電話番号"]];
+            [values addObject:[NSMutableArray arrayWithObject:tel]];
+        }
+        
+        NSString *mailAddress = [(NSString *)[[data objectForKey:@"text"] matchWithPattern:@"email:[^ \t\r\n;　]+" options:NSRegularExpressionCaseInsensitive] matchWithPattern:@"email:" replace:@"" options:NSRegularExpressionCaseInsensitive];
+        
+        if (mailAddress != nil)
+        {
+            if (tel != nil)
+            {
+                [[labels lastObject] addObject:@"Eメール"];
+                [[values lastObject ] addObject:mailAddress];
+            }
+            else
+            {
+                [labels addObject:[NSMutableArray arrayWithObject:@"Eメール"]];
+                [values addObject:[NSMutableArray arrayWithObject:mailAddress]];
+            }
+        }
+        
+        if ([labels count] == 0)
+        {
+            [labels addObject:[NSMutableArray arrayWithObject:@"テキスト"]];
+            [values addObject:[NSMutableArray arrayWithObject:[data objectForKey:@"text"]]];
+        }
+        
+        [labels addObject:[NSMutableArray arrayWithObjects:@"Eメールで送信", @"ツイッターで共有", @"フェイスブックで共有", @"クリップボードにコピー", nil]];
+        
+        //NSString *string = [NSString stringWithFormat:@"http://www.amazon.co.jp/s/ref=nb_sb_noss_2?__mk_ja_JP=%@&url=search-alias%%3Daps&field-keywords=%@&x=0&Ay=0", [data objectForKey:@"text"], [data objectForKey:@"text"]];
+        //NSLog(@"%@", string);
+        //NSURL *path = [NSURL URLWithString:string];
+        //NSURLRequest *req = [NSURLRequest requestWithURL:path];
+        //UIWebView *webView = [[UIWebView alloc] init];
+        //webView.delegate = self;
+        //[webView loadRequest:req];
+        //[self.view addSubview:webView];
+        //[[UIApplication sharedApplication] openURL:[NSURL URLWithString:[[NSString stringWithFormat:@"http://www.google.co.jp/products?q=%@", [data objectForKey:@"text"]] stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]]];
+        //http://www.amazon.co.jp/gp/search/?__mk_ja_JP=%83J%83%5E%83J%83i&field-keywords=
+        //http://www.amazon.co.jp/gp/search/?__mk_ja_JP=%83J%83%5E%83J%83i&url=search-alias%3D【カテゴリー名】&field-keywords=【商品名】
+        //apsでall
+        //http://www.amazon.co.jp/s/ref=nb_sb_noss_2?__mk_ja_JP=%s&url=search-alias%3Daps&field-keywords=%s&x=0&Ay=0
+        
+        if (![_phase isEqualToString:@"history"])
+        {
+            NSUserDefaults *settings = [NSUserDefaults standardUserDefaults];
+            if ([settings boolForKey:@"AUTOMATIC_MODE"] == YES)
+            {
+                if (url != nil)
+                {
+                    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:url]];
+                }
+                else if (mail != nil)
+                {
+                    if (![body isEqualToString:@""] || ![subject isEqualToString:@""])
+                    {
+                        NSLog(@"%@", [NSString stringWithFormat:@"mailto:%@?subject=%@&body=%@", mail, subject, body]);
+                        [[UIApplication sharedApplication] openURL:[NSURL URLWithString:[[NSString stringWithFormat:@"mailto:%@?subject=%@&body=%@", mail, subject, body] stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]]];
+                    }
+                    else
+                    {
+                        [[UIApplication sharedApplication] openURL:[NSURL URLWithString:[[NSString stringWithFormat:@"mailto:%@", mail] stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]]];
+                    }
+                }
+                else if (sms != nil)
+                {
+                    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:[NSString stringWithFormat:@"sms:%@", sms]]];
+                }
+                /*else if (tel != nil)
+                 {
+                 [[UIApplication sharedApplication] openURL:[NSURL URLWithString:tel]];
+                 }*/
+            }
+        }
+    }
+}
+
 #pragma mark - Table view data source
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
@@ -771,19 +604,6 @@ didReceiveResponse:(NSURLResponse *)response
     return cell;
 }
 
-- (CGSize)calculateTextBlockSize:(NSString *)text
-{
-    CGSize size;
-    CGSize value;
-    UIFont *font;
-    
-    font = [UIFont boldSystemFontOfSize:15];
-    size = CGSizeMake(210, 1000);
-    value = [text sizeWithFont:font constrainedToSize:size lineBreakMode:UILineBreakModeCharacterWrap];
-    
-    return value;
-}
-
 #pragma mark - Table view delegate
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
@@ -802,7 +622,6 @@ didReceiveResponse:(NSURLResponse *)response
             [GramContext get]->bootCompleted = YES;
             
             [self.navigationController popViewControllerAnimated:YES];
-            //[self performSegueWithIdentifier:@"captureSegue" sender:self];
             return NO;
         }
     }
@@ -904,7 +723,7 @@ didReceiveResponse:(NSURLResponse *)response
         NSTextCheckingResult *match = [regexp firstMatchInString:self options:0 range:NSMakeRange(0, self.length)];
         if (match.numberOfRanges > 0)
         {
-            NSLog(@"%@", [self substringWithRange:[match rangeAtIndex:0]]);
+            //NSLog(@"%@", [self substringWithRange:[match rangeAtIndex:0]]);
             return [self substringWithRange:[match rangeAtIndex:0]];
         }
     }
@@ -928,7 +747,7 @@ didReceiveResponse:(NSURLResponse *)response
         NSTextCheckingResult *match = [regexp firstMatchInString:self options:options range:NSMakeRange(0, self.length)];
         if (match.numberOfRanges > 0)
         {
-            NSLog(@"%@", [self substringWithRange:[match rangeAtIndex:0]]);
+            //NSLog(@"%@", [self substringWithRange:[match rangeAtIndex:0]]);
             return [self substringWithRange:[match rangeAtIndex:0]];
         }
     }
@@ -949,7 +768,7 @@ didReceiveResponse:(NSURLResponse *)response
                                        range:NSMakeRange(0,self.length)
                                 withTemplate:replace];
 
-    NSLog(@"%@",replaced);
+    //NSLog(@"%@",replaced);
     return replaced;
 }
 
@@ -966,7 +785,7 @@ didReceiveResponse:(NSURLResponse *)response
                                        range:NSMakeRange(0,self.length)
                                 withTemplate:replace];
     
-    NSLog(@"%@",replaced);
+    //NSLog(@"%@",replaced);
     return replaced;
 }
 

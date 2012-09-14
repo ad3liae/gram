@@ -59,7 +59,9 @@
         [GramContext get]->generated = nil;
         if ([[GramContext get]->exportCondition isEqualToString:@"連絡先"] || [[GramContext get]->exportCondition isEqualToString:@"イベント"])
         {
-            [self build];
+            [self createCodeFromString:[self convertString:[GramContext get]->encodeString category:[GramContext get]->exportCondition format:[self getDefaultCondition:[GramContext get]->exportCondition]] codeFormat:kBarcodeFormatQRCode width:280 height:280];
+            
+            [self buildFromData:[GramContext get]->generated exportMode:[GramContext get]->exportMode];
         }
     }
 }
@@ -81,177 +83,23 @@
         [self.tableView deselectRowAtIndexPath:lastIndexPath animated:YES];
     }
     
-    isRegenerate = NO;
-    self.navigationItem.title = @"コード";
-    
-    if ([self.tableView viewWithTag:1] != nil)
-        [[self.tableView viewWithTag:1] removeFromSuperview];
-    if ([self.tableView viewWithTag:2] != nil)
-        [[self.tableView viewWithTag:2] removeFromSuperview];
-    
-    UIImageView *imageView = [[UIImageView alloc] initWithFrame:CGRectMake(20, 20, 280, 280)];
-    imageView.contentMode = UIViewContentModeScaleAspectFit;
-    imageView.tag = 1;
-    UITextView *textView = [[UITextView alloc] initWithFrame:CGRectMake(15, 300, 290, 50)];
-    textView.font = [UIFont boldSystemFontOfSize:14.0f];
-    textView.textColor = [UIColor blackColor];
-    textView.backgroundColor = [UIColor clearColor];
-    textView.editable = NO;
-    textView.tag = 2;
     if ([_phase isEqualToString:@"history"])
     {
-        NSDictionary *data = [GramContext get]->encodeFromHistory;
-        if (data != nil)
-        {
-            labels = [NSMutableArray arrayWithObjects:[NSMutableArray arrayWithObjects:@"エクスポート形式", nil], nil];
-            values = [NSMutableArray arrayWithObjects:[NSMutableArray array], nil];
-            
-            if ([GramContext get]->exportModeFromHistory == nil)
-            {
-                if ([[data objectForKey:@"category"] isEqualToString:@"場所"])
-                {
-                    [GramContext get]->exportModeFromHistory = @"WGS84";
-                    branches = [NSMutableArray arrayWithObjects:[NSMutableArray arrayWithObjects:@"WGS84", nil], nil];
-                }
-                else if ([[data objectForKey:@"category"] isEqualToString:@"連絡先"])
-                {
-                    [GramContext get]->exportModeFromHistory = @"vCard";
-                    branches = [NSMutableArray arrayWithObjects:[NSMutableArray arrayWithObjects:@"meCard", @"vCard", @"docomo", @"au/Softbank", nil], nil];
-                }
-                else if ([[data objectForKey:@"category"] isEqualToString:@"イベント"])
-                {
-                    [GramContext get]->exportModeFromHistory = @"iCalendar";
-                    branches = [NSMutableArray arrayWithObjects:[NSMutableArray arrayWithObjects:@"iCalendar", nil], nil];
-                }
-                else
-                {
-                    [GramContext get]->exportModeFromHistory = @"標準";
-                    if ([[data objectForKey:@"category"] isEqualToString:@"電話番号"] || [[data objectForKey:@"category"] isEqualToString:@"Eメール"])
-                    {
-                        branches = [NSMutableArray arrayWithObjects:[NSMutableArray arrayWithObjects:@"標準", @"docomo", @"au/Softbank", nil], nil];
-                    }
-                    else if ([[data objectForKey:@"category"] isEqualToString:@"URL"])
-                    {
-                        branches = [NSMutableArray arrayWithObjects:[NSMutableArray arrayWithObjects:@"標準", @"docomo", nil], nil];
-                    }
-                    else
-                    {
-                        branches = [NSMutableArray arrayWithObjects:[NSMutableArray arrayWithObjects:@"標準", nil], nil];
-                    }
-                }
-                
-                imageView.image = [UIImage imageWithData:[data objectForKey:@"image"]];
-            }
-            else
-            {
-                isRegenerate = YES;
-                imageView.image = [self createCodeFromString:[self convertString:[data objectForKey:@"text"] category:[data objectForKey:@"category"] format:[GramContext get]->exportModeFromHistory] codeFormat:kBarcodeFormatQRCode width:280 height:280];
-            }
-            branch = [GramContext get]->exportModeFromHistory;
-            [[values objectAtIndex:0] addObject:branch];
-            
-            
-            NSDateFormatter *df = [[NSDateFormatter alloc] init];
-            df.dateFormat  = @"yyyy/MM/dd HH:mm";
-            NSString *result = [data objectForKey:@"text"];
-            NSDate *date = [data objectForKey:@"date"];
-            textView.text = [NSString stringWithFormat:@"encode:\n%@", result];
-            textView.text = [NSString stringWithFormat:@"%@\n\ninformation:\n%@", textView.text, [df stringFromDate:date]];
-            
-            if ([data objectForKey:@"location"] != nil)
-            {
-                CLLocation *location = [NSKeyedUnarchiver unarchiveObjectWithData:[data objectForKey:@"location"]];
-                CLLocationCoordinate2D coordinate = location.coordinate;
-                textView.text = [NSString stringWithFormat:@"%@\n%@", textView.text, [NSString stringWithFormat:@"%f, %f", coordinate.latitude, coordinate.longitude]];
-            }
-        }
+        [self buildFromData:[GramContext get]->encodeFromHistory exportMode:[GramContext get]->exportModeFromHistory];
     }
-    else
+    else if ([GramContext get]->exportMode == nil)
     {
         if ([GramContext get]->generated == nil)
         {
-            NSString *string = [GramContext get]->encodeString;
-            [self createCodeFromString:string codeFormat:kBarcodeFormatQRCode width:280 height:280];
+            [self createCodeFromString:[self convertString:[GramContext get]->encodeString category:[GramContext get]->exportCondition format:[self getDefaultCondition:[GramContext get]->exportCondition]] codeFormat:kBarcodeFormatQRCode width:280 height:280];
         }
         
-        NSDictionary *data = [GramContext get]->generated;
-        if (data != nil)
-        {
-            labels = [NSMutableArray arrayWithObjects:[NSMutableArray arrayWithObjects:@"エクスポート形式", nil], nil];
-            values = [NSMutableArray arrayWithObjects:[NSMutableArray array], nil];
-            
-            if ([GramContext get]->exportMode == nil)
-            {
-                if ([[data objectForKey:@"category"] isEqualToString:@"場所"])
-                {
-                    [GramContext get]->exportMode = @"WGS84";
-                    branches = [NSMutableArray arrayWithObjects:[NSMutableArray arrayWithObjects:@"WGS84", nil], nil];
-                }
-                else if ([[data objectForKey:@"category"] isEqualToString:@"連絡先"])
-                {
-                    [GramContext get]->exportMode = @"vCard";
-                    branches = [NSMutableArray arrayWithObjects:[NSMutableArray arrayWithObjects:@"meCard", @"vCard", @"docomo", @"au/Softbank", nil], nil];
-                }
-                else if ([[data objectForKey:@"category"] isEqualToString:@"イベント"])
-                {
-                    [GramContext get]->exportMode = @"iCalendar";
-                    branches = [NSMutableArray arrayWithObjects:[NSMutableArray arrayWithObjects:@"iCalendar", nil], nil];
-                }
-                else
-                {
-                    [GramContext get]->exportMode = @"標準";
-                    if ([[data objectForKey:@"category"] isEqualToString:@"電話番号"] || [[data objectForKey:@"category"] isEqualToString:@"Eメール"])
-                    {
-                        branches = [NSMutableArray arrayWithObjects:[NSMutableArray arrayWithObjects:@"標準", @"docomo", @"au/Softbank", nil], nil];
-                    }
-                    else if ([[data objectForKey:@"category"] isEqualToString:@"URL"])
-                    {
-                        branches = [NSMutableArray arrayWithObjects:[NSMutableArray arrayWithObjects:@"標準", @"docomo", nil], nil];
-                    }
-                    else
-                    {
-                        branches = [NSMutableArray arrayWithObjects:[NSMutableArray arrayWithObjects:@"標準", nil], nil];
-                    }
-                }
-            }
-            else
-            {
-                isRegenerate = YES;
-                imageView.image = [self createCodeFromString:[self convertString:[data objectForKey:@"text"] category:[data objectForKey:@"category"] format:[GramContext get]->exportMode] codeFormat:kBarcodeFormatQRCode width:280 height:280];
-            }
-            branch = [GramContext get]->exportMode;
-            [[values objectAtIndex:0] addObject:branch];
-            
-            imageView.image = [UIImage imageWithData:[data objectForKey:@"image"]];
-            NSDateFormatter *df = [[NSDateFormatter alloc] init];
-            df.dateFormat  = @"yyyy/MM/dd HH:mm";
-            NSString *result = [data objectForKey:@"text"];
-            NSDate *date = [data objectForKey:@"date"];
-            textView.text = [NSString stringWithFormat:@"encode:\n%@", result];
-            textView.text = [NSString stringWithFormat:@"%@\n\ninformation:\n%@", textView.text, [df stringFromDate:date]];
-            
-            if ([data objectForKey:@"location"] != nil)
-            {
-                CLLocation *location = [NSKeyedUnarchiver unarchiveObjectWithData:[data objectForKey:@"location"]];
-                CLLocationCoordinate2D coordinate = location.coordinate;
-                textView.text = [NSString stringWithFormat:@"%@\n%@", textView.text, [NSString stringWithFormat:@"%f, %f", coordinate.latitude, coordinate.longitude]];
-            }
-        }
-        else
-        {
-            UIAlertView *alert = [[UIAlertView alloc]
-                                  initWithTitle:@"生成できません"
-                                  message:@"データ量超過のため、キャンセルされました"
-                                  delegate:self
-                                  cancelButtonTitle:@"キャンセル"
-                                  otherButtonTitles:nil];
-            [alert show];
-        }
+        [self buildFromData:[GramContext get]->generated exportMode:[GramContext get]->exportMode];
     }
-    
-    [self.tableView addSubview:imageView];
-    //[self.tableView addSubview:textView];
-    [self.tableView reloadData];
+    else
+    {
+        [self buildFromData:[GramContext get]->generated exportMode:[GramContext get]->exportMode];
+    }
     
     UITabBarWithAdController *tabBar = (UITabBarWithAdController *)self.tabBarController;
     tabBar.delegate = self;
@@ -270,98 +118,6 @@
                                             frame.size.width,
                                             frame.size.height - 93)];
     }
-}
-
-- (void)build
-{
-    isRegenerate = NO;
-    self.navigationItem.title = @"コード";
-    
-    UIImageView *imageView = [[UIImageView alloc] initWithFrame:CGRectMake(20, 20, 280, 280)];
-    imageView.contentMode = UIViewContentModeScaleAspectFit;
-    imageView.tag = 1;
-    UITextView *textView = [[UITextView alloc] initWithFrame:CGRectMake(15, 300, 290, 50)];
-    textView.font = [UIFont boldSystemFontOfSize:14.0f];
-    textView.textColor = [UIColor blackColor];
-    textView.backgroundColor = [UIColor clearColor];
-    textView.editable = NO;
-    textView.tag = 2;
-    if ([GramContext get]->generated == nil)
-    {
-        NSString *string = [GramContext get]->encodeString;
-        [self createCodeFromString:[self convertString:string category:[GramContext get]->exportCondition format:[self getDefaultCondition:[GramContext get]->exportCondition]] codeFormat:kBarcodeFormatQRCode width:280 height:280];
-    }
-    
-    NSDictionary *data = [GramContext get]->generated;
-    if (data != nil)
-    {
-        labels = [NSMutableArray arrayWithObjects:[NSMutableArray arrayWithObjects:@"エクスポート形式", nil], nil];
-        values = [NSMutableArray arrayWithObjects:[NSMutableArray array], nil];
-        
-        if ([GramContext get]->exportMode == nil)
-        {
-            if ([[data objectForKey:@"category"] isEqualToString:@"場所"])
-            {
-                [GramContext get]->exportMode = @"WGS84";
-                branches = [NSMutableArray arrayWithObjects:[NSMutableArray arrayWithObjects:@"WGS84", nil], nil];
-            }
-            else if ([[data objectForKey:@"category"] isEqualToString:@"連絡先"])
-            {
-                [GramContext get]->exportMode = @"vCard";
-                branches = [NSMutableArray arrayWithObjects:[NSMutableArray arrayWithObjects:@"meCard", @"vCard", @"docomo", @"au/Softbank", nil], nil];
-            }
-            else if ([[data objectForKey:@"category"] isEqualToString:@"イベント"])
-            {
-                [GramContext get]->exportMode = @"iCalendar";
-                branches = [NSMutableArray arrayWithObjects:[NSMutableArray arrayWithObjects:@"iCalendar", nil], nil];
-            }
-            else
-            {
-                [GramContext get]->exportMode = @"標準";
-                if ([[data objectForKey:@"category"] isEqualToString:@"電話番号"] || [[data objectForKey:@"category"] isEqualToString:@"Eメール"])
-                {
-                    branches = [NSMutableArray arrayWithObjects:[NSMutableArray arrayWithObjects:@"標準", @"docomo", @"au/Softbank", nil], nil];
-                }
-                else if ([[data objectForKey:@"category"] isEqualToString:@"URL"])
-                {
-                    branches = [NSMutableArray arrayWithObjects:[NSMutableArray arrayWithObjects:@"標準", @"docomo", nil], nil];
-                }
-                else
-                {
-                    branches = [NSMutableArray arrayWithObjects:[NSMutableArray arrayWithObjects:@"標準", nil], nil];
-                }
-            }
-        }
-        branch = [GramContext get]->exportMode;
-        [[values objectAtIndex:0] addObject:branch];
-        
-        imageView.image = [UIImage imageWithData:[data objectForKey:@"image"]];
-        NSDateFormatter *df = [[NSDateFormatter alloc] init];
-        df.dateFormat  = @"yyyy/MM/dd HH:mm";
-        NSString *result = [data objectForKey:@"text"];
-        NSDate *date = [data objectForKey:@"date"];
-        textView.text = [NSString stringWithFormat:@"encode:\n%@", result];
-        textView.text = [NSString stringWithFormat:@"%@\n\ninformation:\n%@", textView.text, [df stringFromDate:date]];
-        
-        if ([data objectForKey:@"location"] != nil)
-        {
-            CLLocation *location = [NSKeyedUnarchiver unarchiveObjectWithData:[data objectForKey:@"location"]];
-            CLLocationCoordinate2D coordinate = location.coordinate;
-            textView.text = [NSString stringWithFormat:@"%@\n%@", textView.text, [NSString stringWithFormat:@"%f, %f", coordinate.latitude, coordinate.longitude]];
-        }
-    }
-    else
-    {
-        UIAlertView *alert = [[UIAlertView alloc]
-                              initWithTitle:@"生成できません"
-                              message:@"データ量超過のため、キャンセルされました"
-                              delegate:self
-                              cancelButtonTitle:@"キャンセル"
-                              otherButtonTitles:nil];
-        [alert show];
-    }
-    
-    [self.tableView addSubview:imageView];
 }
 
 - (void)viewDidAppear:(BOOL)animated
@@ -625,6 +381,113 @@
 
 #pragma mark - custom methods
 
+- (void)buildFromData:(NSDictionary *)data exportMode:(NSString *)context
+{
+    isRegenerate = NO;
+    self.navigationItem.title = @"コード";
+    
+    if ([self.tableView viewWithTag:1] != nil)
+        [[self.tableView viewWithTag:1] removeFromSuperview];
+    if ([self.tableView viewWithTag:2] != nil)
+        [[self.tableView viewWithTag:2] removeFromSuperview];
+    
+    UIImageView *imageView = [[UIImageView alloc] initWithFrame:CGRectMake(20, 20, 280, 280)];
+    imageView.contentMode = UIViewContentModeScaleAspectFit;
+    imageView.tag = 1;
+    UITextView *textView = [[UITextView alloc] initWithFrame:CGRectMake(15, 300, 290, 50)];
+    textView.font = [UIFont boldSystemFontOfSize:14.0f];
+    textView.textColor = [UIColor blackColor];
+    textView.backgroundColor = [UIColor clearColor];
+    textView.editable = NO;
+    textView.tag = 2;
+    
+    if (data != nil)
+    {
+        labels = [NSMutableArray arrayWithObjects:[NSMutableArray arrayWithObjects:@"エクスポート形式", nil], nil];
+        values = [NSMutableArray arrayWithObjects:[NSMutableArray array], nil];
+        NSLog(@"context %@", context);
+        if (context == nil)
+        {
+            if ([[data objectForKey:@"category"] isEqualToString:@"場所"])
+            {
+                context = @"WGS84";
+                branches = [NSMutableArray arrayWithObjects:[NSMutableArray arrayWithObjects:@"WGS84", nil], nil];
+            }
+            else if ([[data objectForKey:@"category"] isEqualToString:@"連絡先"])
+            {
+                context = @"vCard";
+                branches = [NSMutableArray arrayWithObjects:[NSMutableArray arrayWithObjects:@"meCard", @"vCard", @"docomo", @"au/Softbank", nil], nil];
+            }
+            else if ([[data objectForKey:@"category"] isEqualToString:@"イベント"])
+            {
+                context = @"iCalendar";
+                branches = [NSMutableArray arrayWithObjects:[NSMutableArray arrayWithObjects:@"iCalendar", nil], nil];
+            }
+            else
+            {
+                context = @"標準";
+                if ([[data objectForKey:@"category"] isEqualToString:@"電話番号"] || [[data objectForKey:@"category"] isEqualToString:@"Eメール"])
+                {
+                    branches = [NSMutableArray arrayWithObjects:[NSMutableArray arrayWithObjects:@"標準", @"docomo", @"au/Softbank", nil], nil];
+                }
+                else if ([[data objectForKey:@"category"] isEqualToString:@"URL"])
+                {
+                    branches = [NSMutableArray arrayWithObjects:[NSMutableArray arrayWithObjects:@"標準", @"docomo", nil], nil];
+                }
+                else
+                {
+                    branches = [NSMutableArray arrayWithObjects:[NSMutableArray arrayWithObjects:@"標準", nil], nil];
+                }
+            }
+            
+            imageView.image = [UIImage imageWithData:[data objectForKey:@"image"]];
+        }
+        else
+        {
+            isRegenerate = YES;
+            NSLog(@"regenerate %@", [self convertString:[data objectForKey:@"text"] category:[data objectForKey:@"category"] format:context]);
+            imageView.image = [self createCodeFromString:[self convertString:[data objectForKey:@"text"] category:[data objectForKey:@"category"] format:context] codeFormat:kBarcodeFormatQRCode width:280 height:280];
+        }
+        branch = context;
+        [[values objectAtIndex:0] addObject:branch];
+        
+        NSDateFormatter *df = [[NSDateFormatter alloc] init];
+        df.dateFormat  = @"yyyy/MM/dd HH:mm";
+        NSString *result = [data objectForKey:@"text"];
+        NSDate *date = [data objectForKey:@"date"];
+        textView.text = [NSString stringWithFormat:@"encode:\n%@", result];
+        textView.text = [NSString stringWithFormat:@"%@\n\ninformation:\n%@", textView.text, [df stringFromDate:date]];
+        
+        if ([data objectForKey:@"location"] != nil)
+        {
+            CLLocation *location = [NSKeyedUnarchiver unarchiveObjectWithData:[data objectForKey:@"location"]];
+            CLLocationCoordinate2D coordinate = location.coordinate;
+            textView.text = [NSString stringWithFormat:@"%@\n%@", textView.text, [NSString stringWithFormat:@"%f, %f", coordinate.latitude, coordinate.longitude]];
+        }
+        
+        if ([_phase isEqualToString:@"history"])
+        {
+            [GramContext get]->exportModeFromHistory = context;
+        }
+        else
+        {
+            [GramContext get]->exportMode = context;
+        }
+    }
+    else
+    {
+        UIAlertView *alert = [[UIAlertView alloc]
+                              initWithTitle:@"生成できません"
+                              message:@"データ量超過のため、キャンセルされました"
+                              delegate:self
+                              cancelButtonTitle:@"キャンセル"
+                              otherButtonTitles:nil];
+        [alert show];
+    }
+    
+    [self.tableView addSubview:imageView];
+}
+
 - (UIImage *)createCodeFromString:(NSString *)string codeFormat:(NSInteger)format width:(NSInteger)width height:(NSInteger)height
 {
     if (string && ![string isEqualToString:@""])
@@ -742,121 +605,6 @@
                                         frame.size.width,
                                         frame.size.height - 93 - 49)];
     [UIView commitAnimations];
-}
-
-@end
-
-#pragma mark - NSString extended
-
-@implementation NSString (NSString_Extended)
-
-- (NSString *)urlencode
-{
-    NSMutableString *output = [NSMutableString string];
-    const unsigned char *source = (const unsigned char *)[self UTF8String];
-    int sourceLen = strlen((const char *)source);
-    for (int i = 0; i < sourceLen; ++i)
-    {
-        const unsigned char thisChar = source[i];
-        if (thisChar == ' ')
-        {
-            [output appendString:@"+"];
-        }
-        else if (thisChar == '.' || thisChar == '-' || thisChar == '_' || thisChar == '~' ||
-                 (thisChar >= 'a' && thisChar <= 'z') ||
-                 (thisChar >= 'A' && thisChar <= 'Z') ||
-                 (thisChar >= '0' && thisChar <= '9'))
-        {
-            [output appendFormat:@"%c", thisChar];
-        }
-        else
-        {
-            [output appendFormat:@"%%%02X", thisChar];
-        }
-    }
-    return output;
-}
-
-- (NSString *)matchWithPattern:(NSString *)pattern
-{
-    NSError *error   = nil;
-    NSRegularExpression *regexp =
-    [NSRegularExpression regularExpressionWithPattern:pattern
-                                              options:0
-                                                error:&error];
-    if (error != nil)
-    {
-        //NSLog(@"%@", error);
-    }
-    else
-    {
-        NSTextCheckingResult *match = [regexp firstMatchInString:self options:0 range:NSMakeRange(0, self.length)];
-        if (match.numberOfRanges > 0)
-        {
-            //NSLog(@"%@", [self substringWithRange:[match rangeAtIndex:0]]);
-            return [self substringWithRange:[match rangeAtIndex:0]];
-        }
-    }
-    
-    return nil;
-}
-
-- (NSString *)matchWithPattern:(NSString *)pattern options:(NSInteger)options
-{
-    NSError *error   = nil;
-    NSRegularExpression *regexp =
-    [NSRegularExpression regularExpressionWithPattern:pattern
-                                              options:options
-                                                error:&error];
-    if (error != nil)
-    {
-        //NSLog(@"%@", error);
-    }
-    else
-    {
-        NSTextCheckingResult *match = [regexp firstMatchInString:self options:options range:NSMakeRange(0, self.length)];
-        if (match.numberOfRanges > 0)
-        {
-            //NSLog(@"%@", [self substringWithRange:[match rangeAtIndex:0]]);
-            return [self substringWithRange:[match rangeAtIndex:0]];
-        }
-    }
-    
-    return nil;
-}
-
-- (NSString *)matchWithPattern:(NSString *)pattern replace:(NSString *)replace
-{
-    NSError *error   = nil;
-    NSRegularExpression *regexp =
-    [NSRegularExpression regularExpressionWithPattern:pattern
-                                              options:0
-                                                error:&error];
-    NSString *replaced =
-    [regexp stringByReplacingMatchesInString:self
-                                     options:0
-                                       range:NSMakeRange(0,self.length)
-                                withTemplate:replace];
-    
-    //NSLog(@"%@",replaced);
-    return replaced;
-}
-
-- (NSString *)matchWithPattern:(NSString *)pattern replace:(NSString *)replace options:(NSInteger)options
-{
-    NSError *error   = nil;
-    NSRegularExpression *regexp =
-    [NSRegularExpression regularExpressionWithPattern:pattern
-                                              options:options
-                                                error:&error];
-    NSString *replaced =
-    [regexp stringByReplacingMatchesInString:self
-                                     options:options
-                                       range:NSMakeRange(0,self.length)
-                                withTemplate:replace];
-    
-    //NSLog(@"%@",replaced);
-    return replaced;
 }
 
 @end

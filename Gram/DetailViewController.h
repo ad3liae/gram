@@ -9,7 +9,7 @@
 #import <UIKit/UIKit.h>
 #import "UITabBarWithAdDelegate.h"
 
-@interface DetailViewController : UIViewController <UITableViewDelegate, UITableViewDataSource, UITabBarWithAdDelegate>
+@interface DetailViewController : UIViewController <UIActionSheetDelegate, UITableViewDelegate, UITableViewDataSource, UITabBarWithAdDelegate>
 @property (nonatomic, retain) NSString *phase;
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
 
