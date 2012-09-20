@@ -383,7 +383,12 @@ didReceiveResponse:(NSURLResponse *)response
     if (data != nil)
     {
         content = [NSString stringWithFormat:@"コード種別\n%@\n\n内容\n%@", [self formatFromId:[data objectForKey:@"format"]], [data objectForKey:@"text"]];
-        UIImage *image = [UIImage imageWithData:[data objectForKey:@"image"]];
+        
+        NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+        NSString *documentDirectory = [paths objectAtIndex:0];
+        NSURL *entryURL = [NSURL fileURLWithPath:[documentDirectory stringByAppendingPathComponent:[data objectForKey:@"image"]]];
+        
+        UIImage *image = [UIImage imageWithContentsOfFile:[entryURL path]];
         CGFloat ratio = image.size.width / image.size.height;
         UIImageView *imageView = [[UIImageView alloc] initWithFrame:CGRectMake(20, 20, 140 * (ratio < 1 ? ratio : 1), 140 * (ratio < 1 ? 1 : ratio))];
         imageView.image = image;

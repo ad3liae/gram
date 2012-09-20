@@ -140,7 +140,12 @@
         {
             annotationView.pinColor = MKPinAnnotationColorGreen;
         }
-        UIImage *image = [UIImage imageWithData:[gramAnnotation.dictionary objectForKey:@"image"]];
+        
+        NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+        NSString *documentDirectory = [paths objectAtIndex:0];
+        NSURL *entryURL = [NSURL fileURLWithPath:[documentDirectory stringByAppendingPathComponent:[gramAnnotation.dictionary objectForKey:@"image"]]];
+
+        UIImage *image = [UIImage imageWithContentsOfFile:[entryURL path]];
         UIImageView *imageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 30, 30)];
         imageView.image = image;
         annotationView.leftCalloutAccessoryView = imageView;

@@ -440,7 +440,13 @@
                 }
             }
             
-            imageView.image = [UIImage imageWithData:[data objectForKey:@"image"]];
+            NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+            NSString *documentDirectory = [paths objectAtIndex:0];
+            NSURL *entryURL = [NSURL fileURLWithPath:[documentDirectory stringByAppendingPathComponent:[data objectForKey:@"image"]]];
+            
+            UIImage *image = [UIImage imageWithContentsOfFile:[entryURL path]];
+            
+            imageView.image = image;
         }
         else
         {
@@ -492,7 +498,7 @@
 {
     if (string && ![string isEqualToString:@""])
     {
-        //NSLog(@"encode %@", string);
+        NSLog(@"encode %@", string);
         ZXMultiFormatWriter *writer = [ZXMultiFormatWriter writer];
         ZXEncodeHints *hints = [ZXEncodeHints new];
         hints.encoding = NSUTF8StringEncoding;
@@ -546,8 +552,11 @@
             }
             
             NSData *imageData = UIImagePNGRepresentation(code);
+            NSString *name = [NSString stringWithFormat:@"%f", [date timeIntervalSinceReferenceDate]];
+            [self save:imageData name:name];
+            
             NSArray *keys = [NSArray arrayWithObjects:@"type", @"category", @"image", @"format", @"text", @"date", @"location", nil];
-            NSArray *datas = [NSArray arrayWithObjects:@"encode", [GramContext get]->exportCondition, imageData, [NSNumber numberWithInt:format], string, date, [NSKeyedArchiver archivedDataWithRootObject:location], nil];
+            NSArray *datas = [NSArray arrayWithObjects:@"encode", [GramContext get]->exportCondition, name, [NSNumber numberWithInt:format], string, date, [NSKeyedArchiver archivedDataWithRootObject:location], nil];
             [GramContext get]->generated = [NSDictionary dictionaryWithObjects:datas forKeys:keys];
             [[GramContext get]->history insertObject:[GramContext get]->generated atIndex:0];
             
@@ -560,6 +569,15 @@
     
     return nil;
 }
+
+- (void)save:(NSData *)image name:(NSString *)name
+{
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    NSString *documentDirectory = [paths objectAtIndex:0];
+    NSString *path = [documentDirectory stringByAppendingPathComponent:name];
+    [image writeToFile:path atomically:YES];
+}
+
 
 #pragma mark - action sheet delegate
 

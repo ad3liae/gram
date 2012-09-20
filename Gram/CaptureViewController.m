@@ -168,6 +168,8 @@
         CGImageRef cgImage = CGBitmapContextCreateImage(newContext);
         UIImage *image = [UIImage imageWithCGImage:cgImage scale:1.0f orientation:UIImageOrientationRight];
         
+        NSDate *date = [NSDate date];
+        
         CLLocation *location = nil;
         NSUserDefaults *settings = [NSUserDefaults standardUserDefaults];
         if ([settings boolForKey:@"USE_LOCATION"])
@@ -182,8 +184,11 @@
         }
         NSLog(@"barcodeFormat %d", [result barcodeFormat]);
         NSData *imageData = UIImageJPEGRepresentation(image, 0.5);
+        NSString *name = [NSString stringWithFormat:@"%f", [date timeIntervalSinceReferenceDate]];
+        [self save:imageData name:name];
+        
         NSArray *keys = [NSArray arrayWithObjects:@"type", @"category", @"image", @"format", @"text", @"date", @"location", nil];
-        NSArray *datas = [NSArray arrayWithObjects:@"decode", [self detectCategoryWithString:[result text]], imageData, [NSNumber numberWithInt:[result barcodeFormat]], [result text], [NSDate dateWithTimeIntervalSinceReferenceDate:[result timestamp]], [NSKeyedArchiver archivedDataWithRootObject:location], nil];
+        NSArray *datas = [NSArray arrayWithObjects:@"decode", [self detectCategoryWithString:[result text]], name, [NSNumber numberWithInt:[result barcodeFormat]], [result text], [NSDate dateWithTimeIntervalSinceReferenceDate:[result timestamp]], [NSKeyedArchiver archivedDataWithRootObject:location], nil];
         
         if ([settings boolForKey:@"CONTINUOUS_MODE"])
         {
@@ -231,6 +236,14 @@
 - (IBAction)tapCancel:(id)sender
 {
     [self dismissViewControllerAnimated:YES completion:nil];
+}
+
+- (void)save:(NSData *)image name:(NSString *)name
+{
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    NSString *documentDirectory = [paths objectAtIndex:0];
+    NSString *path = [documentDirectory stringByAppendingPathComponent:name];
+    [image writeToFile:path atomically:YES];
 }
 
 @end
