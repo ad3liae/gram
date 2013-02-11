@@ -15,7 +15,6 @@
 
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
 @property (nonatomic, retain) NSString *phase;
-- (IBAction)tapAction:(id)sender;
 - (IBAction)tapCamera:(id)sender;
 
 @end

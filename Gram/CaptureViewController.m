@@ -35,13 +35,18 @@
 
 - (void)viewWillAppear:(BOOL)animated
 {
-    mask = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 320, 460)];
+    mask = [[UIView alloc] initWithFrame:self.view.frame];
     mask.backgroundColor = [UIColor scrollViewTexturedBackgroundColor];
     [self.view insertSubview:mask atIndex:0];
     
     UIActivityIndicatorView *activityView = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhite];
     [activityView startAnimating];
-    activityView.frame = CGRectMake(150, 200, 20, 20);
+    
+    CGRect frame = activityView.frame;
+    frame.origin.x = self.view.frame.size.width / 2 - frame.size.width / 2;
+    frame.origin.y = (self.view.frame.size.height - 44) / 2 - frame.size.height / 2;
+    activityView.frame = frame;
+    
     [mask addSubview:activityView];
 }
 

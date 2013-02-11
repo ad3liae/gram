@@ -10,6 +10,7 @@
 		7401EF9415E51BFC00E5C363 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7401EF9315E51BFC00E5C363 /* QuartzCore.framework */; };
 		74107FF715ECBF2E00244285 /* ExportDetailViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 74107FF615ECBF2E00244285 /* ExportDetailViewController.m */; };
 		7413EAB115C2D02300673B7F /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7413EAAE15C2CFDB00673B7F /* AVFoundation.framework */; };
+		742F71CB162FBD9800ADA3C1 /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 742F71CA162FBD9800ADA3C1 /* Default-568h@2x.png */; };
 		7444DEE515E66AFD0068CCFD /* CaptureViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 7444DEE415E66AFD0068CCFD /* CaptureViewController.m */; };
 		744E419415C587B70042BF8D /* AddressBook.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 744E419315C587B70042BF8D /* AddressBook.framework */; };
 		744E419615C587BA0042BF8D /* AddressBookUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 744E419515C587BA0042BF8D /* AddressBookUI.framework */; };
@@ -163,6 +164,7 @@
 		74107FF515ECBF2E00244285 /* ExportDetailViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ExportDetailViewController.h; sourceTree = "<group>"; };
 		74107FF615ECBF2E00244285 /* ExportDetailViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ExportDetailViewController.m; sourceTree = "<group>"; };
 		7413EAAE15C2CFDB00673B7F /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
+		742F71CA162FBD9800ADA3C1 /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
 		7444DEE315E66AFD0068CCFD /* CaptureViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CaptureViewController.h; sourceTree = "<group>"; };
 		7444DEE415E66AFD0068CCFD /* CaptureViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CaptureViewController.m; sourceTree = "<group>"; };
 		744E419315C587B70042BF8D /* AddressBook.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AddressBook.framework; path = System/Library/Frameworks/AddressBook.framework; sourceTree = SDKROOT; };
@@ -345,6 +347,7 @@
 		74CC0D7015C2547F00EB4EE1 = {
 			isa = PBXGroup;
 			children = (
+				742F71CA162FBD9800ADA3C1 /* Default-568h@2x.png */,
 				74791FFF15F4EF9500C78936 /* Kal.xcodeproj */,
 				745C015D15E65676006000AE /* ZXingObjC.xcodeproj */,
 				9AE0535515F826930044B950 /* resources */,
@@ -685,6 +688,7 @@
 				746AAF2416002AB7001BE350 /* listicon_url@2x.png in Resources */,
 				746AAF2516002AB7001BE350 /* listicon_wifi.png in Resources */,
 				746AAF2616002AB7001BE350 /* listicon_wifi@2x.png in Resources */,
+				742F71CB162FBD9800ADA3C1 /* Default-568h@2x.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

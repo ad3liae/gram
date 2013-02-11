@@ -73,6 +73,7 @@
 
 - (void)locationManager:(CLLocationManager *)manager didUpdateToLocation:(CLLocation *)newLocation fromLocation:(CLLocation *)oldLocation
 {
+    NSLog(@"update");
     [GramContext get]->location = newLocation;
 }
 

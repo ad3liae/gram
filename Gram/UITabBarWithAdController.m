@@ -21,7 +21,7 @@
 {
     [super viewDidLoad];
     adView = [[ADBannerView alloc] initWithFrame:CGRectZero];
-    adView.frame = CGRectOffset(adView.frame, -320, 381);
+    adView.frame = CGRectOffset(adView.frame, -320, 381 + 88);
     adView.requiredContentSizeIdentifiers = [NSSet setWithObject:ADBannerContentSizeIdentifierPortrait];
     adView.currentContentSizeIdentifier = ADBannerContentSizeIdentifierPortrait;
     [self.view insertSubview:adView atIndex:1];
@@ -31,7 +31,7 @@
 
 - (void)bannerViewDidLoadAd:(ADBannerView *)banner
 {
-    //NSLog(@"banner loaded");
+    NSLog(@"banner loaded");
     if (!self.bannerIsVisible)
     {
         [UIView beginAnimations:@"animateAdBannerOn" context:NULL];
@@ -49,7 +49,7 @@
 
 -(void)bannerView:(ADBannerView *)banner didFailToReceiveAdWithError:(NSError *)error
 {
-    //NSLog(@"banner failed");
+    NSLog(@"banner failed");
     if (self.bannerIsVisible)
     {
         [UIView beginAnimations:@"animateAdBannerOff" context:NULL];

@@ -50,7 +50,8 @@
     self.tableView.backgroundView = nil;
     self.view.backgroundColor = [UIColor scrollViewTexturedBackgroundColor];
     self.title = @"インポート";
-    
+    isAppeared = NO;
+
     if (![_phase isEqualToString:@"history"])
     {
         [self buildFromData:[GramContext get]->captured];
@@ -119,8 +120,10 @@
         }
     }
     
-    if (isAppeared == NO)
+    if (isAppeared != YES)
     {
+        isAppeared = YES;
+        
         if (url != nil)
         {
             NSURLRequest* request = [NSURLRequest requestWithURL:[NSURL URLWithString:url]];
@@ -134,7 +137,6 @@
             }
         }
     }
-    isAppeared = YES;
 }
 
 - (void)didReceiveMemoryWarning
@@ -376,9 +378,11 @@ didReceiveResponse:(NSURLResponse *)response
 
 -(void)buildFromData:(NSDictionary *)data
 {
-    isAppeared = NO;
     labels = [NSMutableArray array];
     values = [NSMutableArray array];
+    
+    if ([self.tableView viewWithTag:1] != nil)
+        [[self.tableView viewWithTag:1] removeFromSuperview];
     
     if (data != nil)
     {
@@ -391,12 +395,14 @@ didReceiveResponse:(NSURLResponse *)response
         UIImage *image = [UIImage imageWithContentsOfFile:[entryURL path]];
         CGFloat ratio = image.size.width / image.size.height;
         UIImageView *imageView = [[UIImageView alloc] initWithFrame:CGRectMake(20, 20, 140 * (ratio < 1 ? ratio : 1), 140 * (ratio < 1 ? 1 : ratio))];
+        imageView.tag = 1;
         imageView.image = image;
         [imageView setContentMode:UIViewContentModeScaleToFill];
         [self.tableView addSubview:imageView];
+        
         blockSize = [self calculateLabelBlockSize:content frameSize:320 - 140 * (ratio < 1 ? ratio : 1) - 60];
         
-        UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(140 * (ratio < 1 ? ratio : 1) + 40, 20, 320 - 140 * (ratio < 1 ? ratio : 1) - 60, blockSize.height)];
+        UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(140 * (ratio < 1 ? ratio : 1) + 20, 0, 320 - 140 * (ratio < 1 ? ratio : 1) - 60, blockSize.height)];
         label.numberOfLines = 0;
         label.text = content;
         label.textAlignment = UITextAlignmentLeft;
@@ -406,7 +412,7 @@ didReceiveResponse:(NSURLResponse *)response
         label.shadowColor = [UIColor darkGrayColor];
         label.backgroundColor = [UIColor clearColor];
         label.textColor = [UIColor whiteColor];
-        [self.tableView addSubview:label];
+        [imageView addSubview:label];
         
         url = [[data objectForKey:@"text"] matchWithPattern:@"https?:\\/\\/[^ \t\r\n;　]+"];
         if (url != nil)

@@ -26,12 +26,24 @@
     UILabel *placeHolder;
     NSIndexPath *lastIndexPath;
     CGRect frame;
+    
+    //BOOL keyboardShown;
+    
+    
+    
+    float animatedDistance;
 }
 
 @end
 
 @implementation ExportViewController
 @synthesize tableView;
+
+static const CGFloat KEYBOARD_ANIMATION_DURATION = 0.25;
+static const CGFloat MINIMUM_SCROLL_FRACTION = 0.2;
+static const CGFloat MAXIMUM_SCROLL_FRACTION = 0.8;
+static const CGFloat PORTRAIT_KEYBOARD_HEIGHT = 216;
+static const CGFloat LANDSCAPE_KEYBOARD_HEIGHT = 140;
 
 - (void)viewDidLoad
 {
@@ -45,6 +57,8 @@
     
     [GramContext get]->securityType = @"WPA/WPA2";
     [GramContext get]->locationFromMap = nil;
+    
+    //[self registerForKeyboardNotifications];
 }
 
 - (void)viewWillAppear:(BOOL)animated
@@ -184,23 +198,79 @@
 - (BOOL)textView:(UITextView *)textView shouldChangeTextInRange:(NSRange)range replacementText:(NSString *)text
 {
     NSString *newString = [textView.text stringByReplacingCharactersInRange:range withString:text];
-    if ([text isEqualToString:@"\n"])
+    if (newString.length > 0)
     {
-        [inputTextArea resignFirstResponder];
-        return NO;
+        placeHolder.alpha = 0;
     }
     else
     {
-        if (newString.length > 0)
-        {
-            placeHolder.alpha = 0;
-        }
-        else
-        {
-            placeHolder.alpha = 1;
-        }
+        placeHolder.alpha = 1;
     }
+    
     return YES;
+}
+
+- (BOOL)textViewShouldBeginEditing:(UITextView *)textView
+{
+    UIBarButtonItem *closeButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"閉じる"
+                                                                        style:UIBarButtonSystemItemCancel
+                                                                       target:self
+                                                                       action:@selector(tapDone:)];
+    [self.navigationItem setRightBarButtonItem:closeButtonItem animated:YES];
+    
+    CGRect textFieldRect = [self.view.window convertRect:textView.bounds fromView:textView];
+    CGRect viewRect = [self.view.window convertRect:self.view.bounds fromView:self.view];
+    CGFloat midline = textFieldRect.origin.y + 0.5 * textFieldRect.size.height - 20;
+    if ([condition isEqualToString:@"テキスト"] || [condition isEqualToString:@"クリップボードの内容"])
+    {
+        midline = textFieldRect.origin.y + 0.5 * textFieldRect.size.height - 22;
+    }
+    CGFloat numerator = midline - viewRect.origin.y - MINIMUM_SCROLL_FRACTION * viewRect.size.height;
+    CGFloat denominator = (MAXIMUM_SCROLL_FRACTION - MINIMUM_SCROLL_FRACTION) * viewRect.size.height;
+    CGFloat heightFraction = numerator / denominator;
+    
+    if (heightFraction < 0.0)
+    {
+        heightFraction = 0.0;
+    }
+    else if (heightFraction > 1.0)
+    {
+        heightFraction = 1.0;
+    }
+    
+    animatedDistance = floor(PORTRAIT_KEYBOARD_HEIGHT * heightFraction);
+    
+    CGRect viewFrame = self.view.frame;
+    viewFrame.origin.y -= animatedDistance;
+    
+    [UIView beginAnimations:nil context:NULL];
+    [UIView setAnimationBeginsFromCurrentState:YES];
+    [UIView setAnimationDuration:KEYBOARD_ANIMATION_DURATION];
+    [self.view setFrame:viewFrame];
+    [UIView commitAnimations];
+
+    return YES;
+}
+
+-(BOOL)textViewShouldEndEditing:(UITextView *)textView
+{
+    CGRect viewFrame = self.view.frame;
+    viewFrame.origin.y += animatedDistance;
+    
+    [UIView beginAnimations:nil context:NULL];
+    [UIView setAnimationBeginsFromCurrentState:YES];
+    [UIView setAnimationDuration:KEYBOARD_ANIMATION_DURATION];
+    [self.view setFrame:viewFrame];
+    [UIView commitAnimations];
+    
+    return YES;
+}
+
+- (void)tapDone:(id)sender
+{
+    [inputTextArea resignFirstResponder];
+    
+    [self.navigationItem setRightBarButtonItem:nil animated:YES];
 }
 
 #pragma mark - System Configuration
@@ -591,17 +661,15 @@
         if ([label isEqualToString:@"セキュリティ"])
         {
             [GramContext get]->exportDetailCondition = label;
+            
+            lastIndexPath = indexPath;
+            [self performSegueWithIdentifier:@"detailSegue" sender:self];
         }
         else if ([label isEqualToString:@"場所"])
         {
             lastIndexPath = indexPath;
             [self performSegueWithIdentifier:@"locationSegue" sender:self];
-            
-            return;
         }
-        
-        lastIndexPath = indexPath;
-        [self performSegueWithIdentifier:@"detailSegue" sender:self];
     }
 }
 

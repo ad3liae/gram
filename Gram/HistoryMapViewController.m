@@ -35,7 +35,12 @@
     self.title = @"履歴";
     self.navigationItem.rightBarButtonItem = item;
     mapView.delegate = self;
-    mapView.frame = CGRectMake(0, 0, 320, 460 - 44 - 49);
+    
+    CGRect frame = self.view.frame;
+    frame.size.height -= 44;
+    
+    mapView.frame = frame;
+    NSLog(@"%f", mapView.frame.size.height);
     
     if ([[GramContext get]->history count] > 0)
     {
@@ -144,7 +149,6 @@
         NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
         NSString *documentDirectory = [paths objectAtIndex:0];
         NSURL *entryURL = [NSURL fileURLWithPath:[documentDirectory stringByAppendingPathComponent:[gramAnnotation.dictionary objectForKey:@"image"]]];
-
         UIImage *image = [UIImage imageWithContentsOfFile:[entryURL path]];
         UIImageView *imageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 30, 30)];
         imageView.image = image;
