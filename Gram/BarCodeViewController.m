@@ -9,11 +9,6 @@
 #import "BarCodeViewController.h"
 #import "ExportTypeViewController.h"
 #import "GramContext.h"
-#import "ZXBarcodeFormat.h"
-#import "ZXBitMatrix.h"
-#import "ZXImage.h"
-#import "ZXMultiFormatWriter.h"
-#import "ZXEncodeHints.h"
 #import "UITabBarWithAdController.h"
 
 @interface NSString (NSString_Extended)
@@ -59,7 +54,7 @@
         [GramContext get]->generated = nil;
         if ([[GramContext get]->exportCondition isEqualToString:@"連絡先"] || [[GramContext get]->exportCondition isEqualToString:@"イベント"])
         {
-            [self createCodeFromString:[self convertString:[GramContext get]->encodeString category:[GramContext get]->exportCondition format:[self getDefaultCondition:[GramContext get]->exportCondition]] codeFormat:kBarcodeFormatQRCode width:280 height:280];
+            /*[self createCodeFromString:[self convertString:[GramContext get]->encodeString category:[GramContext get]->exportCondition format:[self getDefaultCondition:[GramContext get]->exportCondition]] codeFormat:kBarcodeFormatQRCode width:280 height:280];*/
             
             [self buildFromData:[GramContext get]->generated exportMode:[GramContext get]->exportMode];
         }
@@ -91,7 +86,7 @@
     {
         if ([GramContext get]->generated == nil)
         {
-            [self createCodeFromString:[self convertString:[GramContext get]->encodeString category:[GramContext get]->exportCondition format:[self getDefaultCondition:[GramContext get]->exportCondition]] codeFormat:kBarcodeFormatQRCode width:280 height:280];
+            /*[self createCodeFromString:[self convertString:[GramContext get]->encodeString category:[GramContext get]->exportCondition format:[self getDefaultCondition:[GramContext get]->exportCondition]] codeFormat:kBarcodeFormatQRCode width:280 height:280];*/
         }
         
         [self buildFromData:[GramContext get]->generated exportMode:[GramContext get]->exportMode];
@@ -452,7 +447,7 @@
         {
             isRegenerate = YES;
             NSLog(@"regenerate %@", [self convertString:[data objectForKey:@"text"] category:[data objectForKey:@"category"] format:context]);
-            imageView.image = [self createCodeFromString:[self convertString:[data objectForKey:@"text"] category:[data objectForKey:@"category"] format:context] codeFormat:kBarcodeFormatQRCode width:280 height:280];
+            /*imageView.image = [self createCodeFromString:[self convertString:[data objectForKey:@"text"] category:[data objectForKey:@"category"] format:context] codeFormat:kBarcodeFormatQRCode width:280 height:280];*/
         }
         branch = context;
         [[values objectAtIndex:0] addObject:branch];
@@ -496,6 +491,7 @@
 
 - (UIImage *)createCodeFromString:(NSString *)string codeFormat:(NSInteger)format width:(NSInteger)width height:(NSInteger)height
 {
+    /*
     if (string && ![string isEqualToString:@""])
     {
         NSLog(@"encode %@", string);
@@ -565,7 +561,7 @@
             
             return code;
         }
-    }
+    }*/
     
     return nil;
 }

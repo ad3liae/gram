@@ -34,7 +34,6 @@
 		7458AB1E15FA1B5900FF776C /* reticle.png in Resources */ = {isa = PBXBuildFile; fileRef = 7458AB1D15FA1B5900FF776C /* reticle.png */; };
 		7458AB2015FA225200FF776C /* frame.png in Resources */ = {isa = PBXBuildFile; fileRef = 7458AB1F15FA225200FF776C /* frame.png */; };
 		745B184815E48350001450C1 /* BarCodeViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 745B184715E48350001450C1 /* BarCodeViewController.m */; };
-		745C016E15E65778006000AE /* libZXingObjC-iOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 745C016515E65677006000AE /* libZXingObjC-iOS.a */; };
 		745C017015E65782006000AE /* ImageIO.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 745C016F15E65782006000AE /* ImageIO.framework */; };
 		745E48CB15F7131400DF875B /* DetailViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 745E48CA15F7131400DF875B /* DetailViewController.m */; };
 		7460649715ED0B5C00C8281C /* libxml2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 7460649615ED0B5C00C8281C /* libxml2.dylib */; };
@@ -101,41 +100,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		745C016415E65677006000AE /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 745C015D15E65676006000AE /* ZXingObjC.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 02D26EE2151288DB007F8DC6;
-			remoteInfo = "ZXingObjC-iOS";
-		};
-		745C016615E65677006000AE /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 745C015D15E65676006000AE /* ZXingObjC.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 02D26EF2151288DB007F8DC6;
-			remoteInfo = "ZXingObjCTests-iOS";
-		};
-		745C016815E65677006000AE /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 745C015D15E65676006000AE /* ZXingObjC.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 027EA42C1545EA6A00BA753C;
-			remoteInfo = "ZXingObjC-osx";
-		};
-		745C016A15E65677006000AE /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 745C015D15E65676006000AE /* ZXingObjC.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 027EA43E1545EA6A00BA753C;
-			remoteInfo = "ZXingObjCTests-osx";
-		};
-		745C016C15E65688006000AE /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 745C015D15E65676006000AE /* ZXingObjC.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = 02D26EE1151288DB007F8DC6;
-			remoteInfo = "ZXingObjC-iOS";
-		};
 		7479200615F4EF9500C78936 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 74791FFF15F4EF9500C78936 /* Kal.xcodeproj */;
@@ -194,7 +158,6 @@
 		7458AB1F15FA225200FF776C /* frame.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = frame.png; path = resources/frame.png; sourceTree = "<group>"; };
 		745B184615E48350001450C1 /* BarCodeViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BarCodeViewController.h; sourceTree = "<group>"; };
 		745B184715E48350001450C1 /* BarCodeViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BarCodeViewController.m; sourceTree = "<group>"; };
-		745C015D15E65676006000AE /* ZXingObjC.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = ZXingObjC.xcodeproj; path = ZXingObjC/ZXingObjC.xcodeproj; sourceTree = "<group>"; };
 		745C016F15E65782006000AE /* ImageIO.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ImageIO.framework; path = System/Library/Frameworks/ImageIO.framework; sourceTree = SDKROOT; };
 		745E48C915F7131400DF875B /* DetailViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DetailViewController.h; sourceTree = "<group>"; };
 		745E48CA15F7131400DF875B /* DetailViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DetailViewController.m; sourceTree = "<group>"; };
@@ -296,7 +259,6 @@
 				7465001115EC92BE00BB0F8B /* SystemConfiguration.framework in Frameworks */,
 				74CC0D8415C2547F00EB4EE1 /* CoreGraphics.framework in Frameworks */,
 				745C017015E65782006000AE /* ImageIO.framework in Frameworks */,
-				745C016E15E65778006000AE /* libZXingObjC-iOS.a in Frameworks */,
 				74BA3A1615E5CC6500773D20 /* CoreLocation.framework in Frameworks */,
 				7401EF9415E51BFC00E5C363 /* QuartzCore.framework in Frameworks */,
 				7463F8D615E4A7E10001D3D8 /* MapKit.framework in Frameworks */,
@@ -325,17 +287,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		745C015E15E65676006000AE /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				745C016515E65677006000AE /* libZXingObjC-iOS.a */,
-				745C016715E65677006000AE /* ZXingObjCTests-iOS.octest */,
-				745C016915E65677006000AE /* libZXingObjC-osx.a */,
-				745C016B15E65677006000AE /* ZXingObjCTests-osx.octest */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
 		7479200015F4EF9500C78936 /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -349,7 +300,6 @@
 			children = (
 				742F71CA162FBD9800ADA3C1 /* Default-568h@2x.png */,
 				74791FFF15F4EF9500C78936 /* Kal.xcodeproj */,
-				745C015D15E65676006000AE /* ZXingObjC.xcodeproj */,
 				9AE0535515F826930044B950 /* resources */,
 				74CC0D8515C2547F00EB4EE1 /* Gram */,
 				74CC0DA315C2547F00EB4EE1 /* GramTests */,
@@ -543,7 +493,6 @@
 			);
 			dependencies = (
 				7479200915F4EFA700C78936 /* PBXTargetDependency */,
-				745C016D15E65688006000AE /* PBXTargetDependency */,
 			);
 			name = Gram;
 			productName = Gram;
@@ -593,10 +542,6 @@
 					ProductGroup = 7479200015F4EF9500C78936 /* Products */;
 					ProjectRef = 74791FFF15F4EF9500C78936 /* Kal.xcodeproj */;
 				},
-				{
-					ProductGroup = 745C015E15E65676006000AE /* Products */;
-					ProjectRef = 745C015D15E65676006000AE /* ZXingObjC.xcodeproj */;
-				},
 			);
 			projectRoot = "";
 			targets = (
@@ -607,34 +552,6 @@
 /* End PBXProject section */
 
 /* Begin PBXReferenceProxy section */
-		745C016515E65677006000AE /* libZXingObjC-iOS.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = "libZXingObjC-iOS.a";
-			remoteRef = 745C016415E65677006000AE /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		745C016715E65677006000AE /* ZXingObjCTests-iOS.octest */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.cfbundle;
-			path = "ZXingObjCTests-iOS.octest";
-			remoteRef = 745C016615E65677006000AE /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		745C016915E65677006000AE /* libZXingObjC-osx.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = "libZXingObjC-osx.a";
-			remoteRef = 745C016815E65677006000AE /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		745C016B15E65677006000AE /* ZXingObjCTests-osx.octest */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.cfbundle;
-			path = "ZXingObjCTests-osx.octest";
-			remoteRef = 745C016A15E65677006000AE /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
 		7479200715F4EF9500C78936 /* libKal.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
@@ -775,11 +692,6 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		745C016D15E65688006000AE /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = "ZXingObjC-iOS";
-			targetProxy = 745C016C15E65688006000AE /* PBXContainerItemProxy */;
-		};
 		7479200915F4EFA700C78936 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = Kal;
@@ -874,7 +786,6 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Gram/Gram-Prefix.pch";
 				HEADER_SEARCH_PATHS = (
-					"$(SRCROOT)/ZXingObjC/**",
 					"$(SDKROOT)/usr/include/libxml2/**",
 					"$(SRCROOT)/Kal/src/**",
 				);
@@ -897,7 +808,6 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Gram/Gram-Prefix.pch";
 				HEADER_SEARCH_PATHS = (
-					"$(SRCROOT)/ZXingObjC/**",
 					"$(SDKROOT)/usr/include/libxml2/**",
 					"$(SRCROOT)/Kal/src/**",
 				);

@@ -8,9 +8,6 @@
 
 #import "CaptureViewController.h"
 #import "GramContext.h"
-#import "ZXCapture.h"
-#import "ZXDecodeHints.h"
-#import "ZXResult.h"
 
 @interface NSString (NSString_Extended)
 - (NSString *)matchWithPattern:(NSString *)pattern;
@@ -19,8 +16,8 @@
 
 @interface CaptureViewController ()
 {
-    ZXCapture *captureManager;
     UIView *mask;
+    UIImageView *capture;
 }
 @end
 
@@ -52,7 +49,7 @@
 
 - (void)viewWillDisappear:(BOOL)animated
 {
-    captureManager.delegate = nil;
+    //captureManager.delegate = nil;
 }
 
 - (void)viewDidAppear:(BOOL)animated
@@ -69,14 +66,36 @@
 
 - (void)activateCodeReader
 {
-    captureManager = [[ZXCapture alloc] init];
-    captureManager.delegate = self;
-    captureManager.rotation = 90.0f;
-    captureManager.camera = captureManager.back;
-    captureManager.layer.frame = self.view.bounds;
-    [self.view.layer insertSublayer:captureManager.layer atIndex:0];
+    AVCaptureSession *session = [[AVCaptureSession alloc] init];
+    AVCaptureVideoPreviewLayer *videoLayer = [[AVCaptureVideoPreviewLayer alloc] initWithSession:session];
+    videoLayer.frame = self.view.frame;
+    
+    AVCaptureDevice *captureDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
+    
+    NSError *error = nil;
+    AVCaptureDeviceInput *captureDeviceInput = [AVCaptureDeviceInput deviceInputWithDevice:captureDevice error:&error];
+    
+    if (!captureDeviceInput) {
+        NSLog(@"ERROR: %@", error);
+    }
+    
+    AVCaptureMetadataOutput *metaOutput = [[AVCaptureMetadataOutput alloc] init];
+    [metaOutput setMetadataObjectsDelegate:self queue:dispatch_queue_create("myQueue.metadata", DISPATCH_QUEUE_SERIAL)];
+    
+    [session addInput:captureDeviceInput];
+    [session addOutput:metaOutput];
+    [session startRunning];
+    
+    metaOutput.metadataObjectTypes = @[AVMetadataObjectTypeQRCode, AVMetadataObjectTypeEAN13Code];
+    
     UIImageView *imageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 320, 416)];
     imageView.image = [UIImage imageNamed:@"frame.png"];
+    
+    capture = [UIImageView new];
+    capture.frame = self.view.frame;
+    [capture.layer addSublayer:videoLayer];
+    
+    [self.view addSubview:capture];
     [self.view addSubview:imageView];
     
     UILabel *notice = [[UILabel alloc] initWithFrame:CGRectMake(0, 358, 320, 40)];
@@ -89,7 +108,6 @@
     notice.backgroundColor = [UIColor clearColor];
     notice.textColor = [UIColor whiteColor];
     [imageView addSubview:notice];
-    [captureManager start];
     
     [UIView beginAnimations:nil context:nil];
     [UIView setAnimationDelegate:self];
@@ -156,6 +174,45 @@
     return type;
 }
 
+- (void)captureOutput:(AVCaptureOutput *)captureOutput didOutputMetadataObjects:(NSArray *)metadataObjects fromConnection:(AVCaptureConnection *)connection
+{
+    for (AVMetadataObject *data in metadataObjects) {
+        if (![data isKindOfClass:[AVMetadataMachineReadableCodeObject class]])
+            continue;
+        
+        NSString *strValue = [(AVMetadataMachineReadableCodeObject *)data stringValue];
+        NSLog(@"%@ <%@>", strValue, data.type);
+        
+        if ([data.type isEqualToString:AVMetadataObjectTypeQRCode]) {
+            NSURL *url = [NSURL URLWithString:strValue];
+            if ([[UIApplication sharedApplication] canOpenURL:url]) {
+                [[UIApplication sharedApplication] openURL:url];
+            }
+        }
+        else if([data.type isEqualToString:AVMetadataObjectTypeEAN13Code]) {
+            long long value = strValue.longLongValue;
+            NSInteger prefix = value / 10000000000;
+            
+            // ISBN
+            if (prefix == 978 || prefix == 979) {
+                long long isbn9 = (value % 10000000000) / 10;
+                long long sum = 0, tmp_isbn = isbn9;
+                for (int i=10; i>0 && tmp_isbn>0; i--) {
+                    long long divisor = pow(10, i-2);
+                    sum += (tmp_isbn / divisor) * i;
+                    tmp_isbn %= divisor;
+                }
+                long long checkdigit = 11 - (sum % 11);
+                
+                NSString *asin = [NSString stringWithFormat:@"http://amazon.jp/dp/%lld%@", isbn9, (checkdigit == 10) ? @"X" : [NSString stringWithFormat:@"%lld", checkdigit % 11]];
+                [[UIApplication sharedApplication] openURL:[NSURL URLWithString:asin]];
+            }
+            
+        }
+    }
+}
+
+/*
 #pragma mark - ZXCaptureDelegate Methods
 
 - (void)captureResult:(ZXCapture *)capture result:(ZXResult *)result
@@ -172,7 +229,7 @@
         CGContextRef newContext = CGBitmapContextCreate(baseAddress, width, height, 8, bytesPerRow, colorSpace, kCGBitmapByteOrder32Little | kCGImageAlphaPremultipliedFirst);
         CGImageRef cgImage = CGBitmapContextCreateImage(newContext);
         UIImage *image = [UIImage imageWithCGImage:cgImage scale:1.0f orientation:UIImageOrientationRight];
-        
+ 
         NSDate *date = [NSDate date];
         
         CLLocation *location = nil;
@@ -237,6 +294,7 @@
 {
     
 }
+*/
 
 - (IBAction)tapCancel:(id)sender
 {

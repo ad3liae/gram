@@ -11,13 +11,8 @@
 #import <AudioToolbox/AudioToolbox.h>
 #import <AVFoundation/AVFoundation.h>
 #import <QuartzCore/QuartzCore.h>
-#import "ZXCaptureDelegate.h"
-#import "CaptureViewDelegate.h"
 
-@interface CaptureViewController : UIViewController <ZXCaptureDelegate>
-{
-    id<CaptureViewDelegate> delegate;
-}
+@interface CaptureViewController : UIViewController <AVCaptureVideoDataOutputSampleBufferDelegate, AVCaptureMetadataOutputObjectsDelegate>
 
 @property (nonatomic, retain) id delegate;
 - (IBAction)tapCancel:(id)sender;
