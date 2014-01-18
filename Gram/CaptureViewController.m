@@ -17,7 +17,9 @@
 @interface CaptureViewController ()
 {
     UIView *mask;
-    UIImageView *capture;
+    UIView *preview;
+    BOOL ready;
+    BOOL captured;
 }
 @end
 
@@ -67,6 +69,8 @@
 - (void)activateCodeReader
 {
     AVCaptureSession *session = [[AVCaptureSession alloc] init];
+    session.sessionPreset = AVCaptureSessionPreset1280x720;
+    
     AVCaptureVideoPreviewLayer *videoLayer = [[AVCaptureVideoPreviewLayer alloc] initWithSession:session];
     videoLayer.frame = self.view.frame;
     
@@ -82,32 +86,39 @@
     AVCaptureMetadataOutput *metaOutput = [[AVCaptureMetadataOutput alloc] init];
     [metaOutput setMetadataObjectsDelegate:self queue:dispatch_queue_create("myQueue.metadata", DISPATCH_QUEUE_SERIAL)];
     
+    NSDictionary* settings = @{(id)kCVPixelBufferPixelFormatTypeKey:[NSNumber numberWithInt:kCVPixelFormatType_32BGRA]};
+    AVCaptureVideoDataOutput* dataOutput = [[AVCaptureVideoDataOutput alloc] init];
+    dataOutput.videoSettings = settings;
+    dataOutput.alwaysDiscardsLateVideoFrames = YES;
+    [dataOutput setSampleBufferDelegate:self queue:dispatch_get_main_queue()];
+    
     [session addInput:captureDeviceInput];
     [session addOutput:metaOutput];
+    [session addOutput:dataOutput];
     [session startRunning];
     
     metaOutput.metadataObjectTypes = @[AVMetadataObjectTypeQRCode, AVMetadataObjectTypeEAN13Code];
     
-    UIImageView *imageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 320, 416)];
-    imageView.image = [UIImage imageNamed:@"frame.png"];
+    UIImageView *container = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 320, 416)];
+    container.image = [UIImage imageNamed:@"frame.png"];
     
-    capture = [UIImageView new];
-    capture.frame = self.view.frame;
-    [capture.layer addSublayer:videoLayer];
+    preview = [UIView new];
+    preview.frame = self.view.frame;
+    [preview.layer addSublayer:videoLayer];
     
-    [self.view addSubview:capture];
-    [self.view addSubview:imageView];
+    [self.view addSubview:preview];
+    [self.view addSubview:container];
     
     UILabel *notice = [[UILabel alloc] initWithFrame:CGRectMake(0, 358, 320, 40)];
     notice.numberOfLines = 0;
     notice.text = @"枠の中に収まるように\nバーコードをセットしてください";
-    notice.textAlignment = UITextAlignmentCenter;
+    notice.textAlignment = NSTextAlignmentCenter;
     notice.font = [UIFont systemFontOfSize:15.0];
     notice.shadowOffset = CGSizeMake(0, -1);
     notice.shadowColor = [UIColor darkGrayColor];
     notice.backgroundColor = [UIColor clearColor];
     notice.textColor = [UIColor whiteColor];
-    [imageView addSubview:notice];
+    [container addSubview:notice];
     
     [UIView beginAnimations:nil context:nil];
     [UIView setAnimationDelegate:self];
@@ -174,11 +185,32 @@
     return type;
 }
 
+- (void)captureOutput:(AVCaptureOutput *)captureOutput didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer fromConnection:(AVCaptureConnection *)connection {
+    if (ready) {
+        ready = NO;
+        captured = YES;
+        
+        UIImage *image = [self imageFromSampleBufferRef:sampleBuffer];
+        UIImageView *imageView = [UIImageView new];
+        imageView.backgroundColor = [UIColor redColor];
+        imageView.frame = CGRectMake(0, 0, image.size.width / 2, image.size.height / 2);
+        imageView.image = image;
+        [self.view addSubview:imageView];
+    }
+}
+
 - (void)captureOutput:(AVCaptureOutput *)captureOutput didOutputMetadataObjects:(NSArray *)metadataObjects fromConnection:(AVCaptureConnection *)connection
 {
     for (AVMetadataObject *data in metadataObjects) {
-        if (![data isKindOfClass:[AVMetadataMachineReadableCodeObject class]])
+        if (![data isKindOfClass:[AVMetadataMachineReadableCodeObject class]]) {
             continue;
+        }
+        
+        if (captured) {
+            continue;
+        }
+        
+        ready = YES;
         
         NSString *strValue = [(AVMetadataMachineReadableCodeObject *)data stringValue];
         NSLog(@"%@ <%@>", strValue, data.type);
@@ -186,7 +218,7 @@
         if ([data.type isEqualToString:AVMetadataObjectTypeQRCode]) {
             NSURL *url = [NSURL URLWithString:strValue];
             if ([[UIApplication sharedApplication] canOpenURL:url]) {
-                [[UIApplication sharedApplication] openURL:url];
+                //[[UIApplication sharedApplication] openURL:url];
             }
         }
         else if([data.type isEqualToString:AVMetadataObjectTypeEAN13Code]) {
@@ -211,6 +243,38 @@
         }
     }
 }
+
+- (UIImage *)imageFromSampleBufferRef:(CMSampleBufferRef)sampleBuffer
+{
+    CVImageBufferRef buffer;
+    buffer = CMSampleBufferGetImageBuffer(sampleBuffer);
+    
+    CVPixelBufferLockBaseAddress(buffer, 0);
+    
+    uint8_t *base;
+    size_t width, height, bytesPerRow;
+    base = CVPixelBufferGetBaseAddress(buffer);
+    width = CVPixelBufferGetWidth(buffer);
+    height = CVPixelBufferGetHeight(buffer);
+    bytesPerRow = CVPixelBufferGetBytesPerRow(buffer);
+    
+    CGColorSpaceRef colorSpace;
+    CGContextRef cgContext;
+    colorSpace = CGColorSpaceCreateDeviceRGB();
+    cgContext = CGBitmapContextCreate(base, width, height, 8, bytesPerRow, colorSpace, kCGBitmapByteOrder32Little | kCGImageAlphaPremultipliedFirst);
+    CGColorSpaceRelease(colorSpace);
+    
+    CGImageRef cgImage;
+    UIImage *image;
+    cgImage = CGBitmapContextCreateImage(cgContext);
+    image = [UIImage imageWithCGImage:cgImage scale:1.0f orientation:UIImageOrientationUp];
+    CGImageRelease(cgImage);
+    CGContextRelease(cgContext);
+    
+    CVPixelBufferUnlockBaseAddress(buffer, 0);
+    return image;
+}
+
 
 /*
 #pragma mark - ZXCaptureDelegate Methods
