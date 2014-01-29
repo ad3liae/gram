@@ -8,11 +8,9 @@
 
 #import "CaptureViewController.h"
 #import "GramContext.h"
+#import "ImageManager.h"
 
-@interface NSString (NSString_Extended)
-- (NSString *)matchWithPattern:(NSString *)pattern;
-- (NSString *)matchWithPattern:(NSString *)pattern options:(NSInteger)options;
-@end
+#import "NSString+MWORKS.h"
 
 @interface CaptureViewController ()
 {
@@ -20,6 +18,7 @@
     UIView *preview;
     BOOL ready;
     BOOL captured;
+    AVMetadataObject *metadata;
 }
 @end
 
@@ -63,7 +62,6 @@
 - (void)didReceiveMemoryWarning
 {
     [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
 }
 
 - (void)activateCodeReader
@@ -185,17 +183,88 @@
     return type;
 }
 
+- (id)transformedCMTime:(CMTime)time
+{
+    Float64 seconds = CMTimeGetSeconds(time);
+    seconds -= [[NSTimeZone systemTimeZone] secondsFromGMT];
+    
+    return [NSDate dateWithTimeIntervalSince1970:seconds];
+}
+
 - (void)captureOutput:(AVCaptureOutput *)captureOutput didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer fromConnection:(AVCaptureConnection *)connection {
     if (ready) {
+        
+        NSUserDefaults *settings = [NSUserDefaults standardUserDefaults];
+        
+        NSString *stringValue = [(AVMetadataMachineReadableCodeObject *)metadata stringValue];
+        
+        if ([settings boolForKey:@"CONTINUOUS_MODE"])
+        {
+            if ([GramContext get]->captured != nil)
+            {
+                if ([[[GramContext get]->captured objectForKey:@"text"] isEqualToString:stringValue])
+                {
+                    return;
+                }
+            }
+        }
+        
         ready = NO;
         captured = YES;
         
         UIImage *image = [self imageFromSampleBufferRef:sampleBuffer];
         UIImageView *imageView = [UIImageView new];
         imageView.backgroundColor = [UIColor redColor];
-        imageView.frame = CGRectMake(0, 0, image.size.width / 2, image.size.height / 2);
+        imageView.frame = CGRectMake(0, 0, image.size.width / 4, image.size.height / 4);
         imageView.image = image;
         [self.view addSubview:imageView];
+        
+        CLLocation *location = nil;
+        
+        if ([settings boolForKey:@"USE_LOCATION"])
+        {
+            if ([CLLocationManager locationServicesEnabled])
+            {
+                if ([GramContext get]->location)
+                {
+                    location = [GramContext get]->location;
+                }
+            }
+        }
+        
+        NSDate *date = [self transformedCMTime:metadata.time];
+        NSData *imageData = UIImageJPEGRepresentation(image, 1.0);
+        NSString *name = [NSString stringWithFormat:@"%f", [date timeIntervalSinceReferenceDate]];
+        [self save:imageData name:name];
+        
+        NSDictionary *object = @{
+            @"type"     : @"decode",
+            @"category" : [self detectCategoryWithString:stringValue],
+            @"image"    : name,
+            @"format"   : metadata.type,
+            @"text"     : stringValue,
+            @"date"     : date,
+            @"location" : [NSKeyedArchiver archivedDataWithRootObject:location]
+        };
+        
+        [GramContext get]->sharedCompleted = NO;
+        [GramContext get]->captured = object;
+        [[GramContext get]->history addObject:object];
+        
+        [settings setObject:[[GramContext get]->history copy] forKey:@"HISTORY"];
+        [settings synchronize];
+        
+        // Vibrate
+        AudioServicesPlaySystemSound(kSystemSoundID_Vibrate);
+        
+        if ([settings boolForKey:@"CONTINUOUS_MODE"])
+        {
+            
+        }
+        else
+        {
+            [self dismissViewControllerAnimated:YES completion:nil];
+        }
     }
 }
 
@@ -239,13 +308,14 @@
                 NSString *asin = [NSString stringWithFormat:@"http://amazon.jp/dp/%lld%@", isbn9, (checkdigit == 10) ? @"X" : [NSString stringWithFormat:@"%lld", checkdigit % 11]];
                 [[UIApplication sharedApplication] openURL:[NSURL URLWithString:asin]];
             }
-            
         }
     }
 }
 
 - (UIImage *)imageFromSampleBufferRef:(CMSampleBufferRef)sampleBuffer
 {
+    AVCaptureVideoOrientation orientation = UIImageOrientationRight;
+    
     CVImageBufferRef buffer;
     buffer = CMSampleBufferGetImageBuffer(sampleBuffer);
     
@@ -267,14 +337,14 @@
     CGImageRef cgImage;
     UIImage *image;
     cgImage = CGBitmapContextCreateImage(cgContext);
-    image = [UIImage imageWithCGImage:cgImage scale:1.0f orientation:UIImageOrientationUp];
+    image = [UIImage imageWithCGImage:cgImage scale:1.0f orientation:orientation];
     CGImageRelease(cgImage);
     CGContextRelease(cgContext);
     
     CVPixelBufferUnlockBaseAddress(buffer, 0);
+    
     return image;
 }
-
 
 /*
 #pragma mark - ZXCaptureDelegate Methods
