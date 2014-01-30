@@ -7,14 +7,6 @@
 //
 
 #import "AppDelegate.h"
-#import "GramContext.h"
-
-@interface AppDelegate ()
-{
-    CLLocationManager *locationManager;
-}
-
-@end
 
 @implementation AppDelegate
 
@@ -23,17 +15,17 @@
     [GramContext get]->history = [NSMutableArray array];
     [GramContext get]->location = nil;
     [GramContext get]->bootCompleted = NO;
-    if ([CLLocationManager locationServicesEnabled])
-    {
-        locationManager = [[CLLocationManager alloc] init];
-        locationManager.delegate = self;
-        [locationManager startUpdatingLocation];
-    }
     
     NSUserDefaults *settings = [NSUserDefaults standardUserDefaults];
-    NSArray *keys = [NSArray arrayWithObjects:@"HISTORY", @"INSTANT_BOOT_MODE", @"AUTOMATIC_MODE", @"CONTINUOUS_MODE", @"USE_LOCATION", @"QR_ERROR_CORRECTION_LEVEL", @"IMPORT_MODE", nil];
-    NSArray *objects = [NSArray arrayWithObjects:[NSArray array], [NSNumber numberWithBool:NO], [NSNumber numberWithBool:NO], [NSNumber numberWithBool:NO], [NSNumber numberWithBool:YES], @"L", @"自動判別", nil];
-    NSDictionary *defaults = [NSDictionary dictionaryWithObjects:objects forKeys:keys];
+    NSDictionary *defaults = @{
+        @"HISTORY"                   : @[],
+        @"INSTANT_BOOT_MODE"         : @NO,
+        @"AUTOMATIC_MODE"            : @NO,
+        @"CONTINUOUS_MODE"           : @NO,
+        @"USE_LOCATION"              : @YES,
+        @"QR_ERROR_CORRECTION_LEVEL" : @"L",
+        @"IMPORT_MODE"               : @"自動判別"
+    };
     [settings registerDefaults:defaults];
     
     [GramContext get]->history = [NSMutableArray arrayWithArray:[settings arrayForKey:@"HISTORY"]];
@@ -66,13 +58,6 @@
 - (void)applicationWillTerminate:(UIApplication *)application
 {
     // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
-}
-
-#pragma mark - Location
-
-- (void)locationManager:(CLLocationManager *)manager didUpdateToLocation:(CLLocation *)newLocation fromLocation:(CLLocation *)oldLocation
-{
-    [GramContext get]->location = newLocation;
 }
 
 @end

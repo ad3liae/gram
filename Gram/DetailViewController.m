@@ -7,7 +7,7 @@
 //
 
 #import "DetailViewController.h"
-#import "GramContext.h"
+
 #import "UITabBarWithAdController.h"
 
 @interface NSString (NSString_Extended)

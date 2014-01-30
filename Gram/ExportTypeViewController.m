@@ -7,7 +7,7 @@
 //
 
 #import "ExportTypeViewController.h"
-#import "GramContext.h"
+
 #import "UITabBarWithAdController.h"
 
 @interface ExportTypeViewController ()

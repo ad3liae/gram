@@ -111,6 +111,7 @@
 		74F005C715F07EE50083AA59 /* ExportLocationViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 74F005C615F07EE50083AA59 /* ExportLocationViewController.m */; };
 		74F005CA15F092210083AA59 /* EventKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 74F005C815F092210083AA59 /* EventKit.framework */; };
 		74F005CB15F092210083AA59 /* EventKitUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 74F005C915F092210083AA59 /* EventKitUI.framework */; };
+		962B32B61899E5CF003D7094 /* LocationManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 962B32B51899E5CF003D7094 /* LocationManager.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -287,6 +288,8 @@
 		74F005C615F07EE50083AA59 /* ExportLocationViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ExportLocationViewController.m; sourceTree = "<group>"; };
 		74F005C815F092210083AA59 /* EventKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = EventKit.framework; path = System/Library/Frameworks/EventKit.framework; sourceTree = SDKROOT; };
 		74F005C915F092210083AA59 /* EventKitUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = EventKitUI.framework; path = System/Library/Frameworks/EventKitUI.framework; sourceTree = SDKROOT; };
+		962B32B41899E5CF003D7094 /* LocationManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LocationManager.h; sourceTree = "<group>"; };
+		962B32B51899E5CF003D7094 /* LocationManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LocationManager.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -491,6 +494,8 @@
 				74B7B71118992496003D8908 /* ImageManager.m */,
 				74B92EDA189926D40044C6D4 /* NSString+MWORKS.h */,
 				74B92EDB189926D40044C6D4 /* NSString+MWORKS.m */,
+				962B32B41899E5CF003D7094 /* LocationManager.h */,
+				962B32B51899E5CF003D7094 /* LocationManager.m */,
 			);
 			path = Gram;
 			sourceTree = "<group>";
@@ -577,8 +582,8 @@
 			buildPhases = (
 				74CC0D7715C2547F00EB4EE1 /* Sources */,
 				74CC0D7815C2547F00EB4EE1 /* Frameworks */,
-				74CC0D7915C2547F00EB4EE1 /* Resources */,
 				7413EAB915C2DFAA00673B7F /* ShellScript */,
+				74CC0D7915C2547F00EB4EE1 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -774,6 +779,7 @@
 				74107FF715ECBF2E00244285 /* ExportDetailViewController.m in Sources */,
 				7460649A15ED0E2300C8281C /* HTMLParser.m in Sources */,
 				74F005C715F07EE50083AA59 /* ExportLocationViewController.m in Sources */,
+				962B32B61899E5CF003D7094 /* LocationManager.m in Sources */,
 				74B92ED9189926A40044C6D4 /* Reachability.m in Sources */,
 				7479201415F4F1A900C78936 /* EventKitDataSource.m in Sources */,
 				7479201915F4F20C00C78936 /* NSDateAdditions.m in Sources */,

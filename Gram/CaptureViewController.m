@@ -7,7 +7,7 @@
 //
 
 #import "CaptureViewController.h"
-#import "GramContext.h"
+
 #import "ImageManager.h"
 
 #import "NSString+MWORKS.h"
@@ -234,13 +234,13 @@
         
         NSDate *date = [self transformedCMTime:metadata.time];
         NSData *imageData = UIImageJPEGRepresentation(image, 1.0);
-        NSString *name = [NSString stringWithFormat:@"%f", [date timeIntervalSinceReferenceDate]];
-        [self save:imageData name:name];
+        NSString *identifier = [[NSUUID new] UUIDString];
+        [[ImageManager sharedInstance] saveImage:image identifier:identifier];
         
         NSDictionary *object = @{
             @"type"     : @"decode",
             @"category" : [self detectCategoryWithString:stringValue],
-            @"image"    : name,
+            @"id"       : identifier,
             @"format"   : metadata.type,
             @"text"     : stringValue,
             @"date"     : date,

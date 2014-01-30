@@ -10,7 +10,7 @@
 #import "BarCodeViewController.h"
 #import "ReaderViewController.h"
 #import "UITabBarWithAdController.h"
-#import "GramContext.h"
+
 #import "GramAnnotation.h"
 #import "DetailViewController.h"
 

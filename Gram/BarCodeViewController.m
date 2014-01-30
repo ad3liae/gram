@@ -8,7 +8,7 @@
 
 #import "BarCodeViewController.h"
 #import "ExportTypeViewController.h"
-#import "GramContext.h"
+
 #import "UITabBarWithAdController.h"
 
 @interface NSString (NSString_Extended)

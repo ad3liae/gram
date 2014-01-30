@@ -11,7 +11,7 @@
 #import "UITabBarWithAdController.h"
 #import "ReaderViewController.h"
 #import "DetailViewController.h"
-#import "GramContext.h"
+
 
 @interface HistoryListViewController ()
 {

@@ -3,7 +3,7 @@
 //  Monolith Works Inc.
 //
 //  Created by Yoshimura Kenya on 2014/01/24.
-//  Copyright (c) 2014年 STG. All rights reserved.
+//  Copyright (c) 2014年 Yoshimura Kenya. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
