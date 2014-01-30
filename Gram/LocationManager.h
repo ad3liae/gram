@@ -17,11 +17,12 @@
 @end
 
 @interface LocationManager : NSObject <CLLocationManagerDelegate>
-@property (nonatomic, retain) id<LocationManagerDelegate> delegate;
+@property (nonatomic, assign) id<LocationManagerDelegate> delegate;
 
 + (LocationManager *)sharedInstance;
 
 - (void)startUpdatingLocation;
 - (void)stopUpdatingLocation;
+- (CLLocation *)getLocation;
 
 @end

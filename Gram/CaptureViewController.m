@@ -8,6 +8,7 @@
 
 #import "CaptureViewController.h"
 
+#import "LocationManager.h"
 #import "ImageManager.h"
 
 #import "NSString+MWORKS.h"
@@ -29,6 +30,11 @@
 {
     [super viewDidLoad];
     self.view.backgroundColor = [UIColor blackColor];
+    
+    NSUserDefaults *settings = [NSUserDefaults standardUserDefaults];
+    if ([settings boolForKey:@"USE_LOCATION"]) {
+        [[LocationManager sharedInstance] startUpdatingLocation];
+    }
 }
 
 - (void)viewWillAppear:(BOOL)animated
@@ -220,27 +226,18 @@
         [self.view addSubview:imageView];
         
         CLLocation *location = nil;
-        
-        if ([settings boolForKey:@"USE_LOCATION"])
-        {
-            if ([CLLocationManager locationServicesEnabled])
-            {
-                if ([GramContext get]->location)
-                {
-                    location = [GramContext get]->location;
-                }
-            }
+        if ([settings boolForKey:@"USE_LOCATION"]) {
+            location = [[LocationManager sharedInstance] getLocation];
         }
         
         NSDate *date = [self transformedCMTime:metadata.time];
-        NSData *imageData = UIImageJPEGRepresentation(image, 1.0);
         NSString *identifier = [[NSUUID new] UUIDString];
         [[ImageManager sharedInstance] saveImage:image identifier:identifier];
         
         NSDictionary *object = @{
+            @"id"       : identifier,
             @"type"     : @"decode",
             @"category" : [self detectCategoryWithString:stringValue],
-            @"id"       : identifier,
             @"format"   : metadata.type,
             @"text"     : stringValue,
             @"date"     : date,

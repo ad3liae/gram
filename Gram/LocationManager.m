@@ -56,6 +56,11 @@
     locationManager = nil;
 }
 
+- (CLLocation *)getLocation
+{
+    return location;
+}
+
 #pragma mark - Location Manager
 
 -(void)locationManager:(CLLocationManager *)manager didFailWithError:(NSError *)error
